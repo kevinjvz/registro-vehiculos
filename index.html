@@ -60,17 +60,15 @@
 
       fetch('https://script.google.com/macros/s/AKfycbxfutf3qMEu8kxt0VKnCjMd_WslfwQl4aMMED7gRxSctkzvDLvt0s3olNb2ajnDojX6/exec', {
         method: 'POST',
+        mode: 'no-cors', // ⚠️ Solución para evitar error CORS en GitHub Pages
         body: JSON.stringify({ fecha, vehiculo, numeroSerie, trabajador }),
-        headers: { 'Content-Type': 'application/json' }
-      })
-      .then(response => response.text())
-      .then(data => {
-        if (data.trim() === "OK") {
-          mostrarMensaje("✅ Registro enviado correctamente", "green");
-          limpiarFormulario();
-        } else {
-          mostrarMensaje("❌ Error del servidor: " + data, "red");
+        headers: {
+          'Content-Type': 'application/json'
         }
+      })
+      .then(() => {
+        mostrarMensaje("✅ Registro enviado correctamente", "green");
+        limpiarFormulario();
       })
       .catch(error => {
         mostrarMensaje("❌ Error de conexión: " + error.message, "red");
