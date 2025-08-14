@@ -66,8 +66,7 @@
   <label for="trabajador">Trabajador:</label>
   <input type="text" id="trabajador" required>
 
-  <button id="btnEnviar" onclick="enviarDatos()">Enviar</button>
-
+  <button onclick="enviarDatos()">Enviar</button>
   <div id="mensaje"></div>
 
   <!-- Ventana emergente de carga -->
@@ -78,66 +77,57 @@
   </div>
 
   <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/TU_DEPLOY_ID/exec';
+    function enviarDatos() {
+      const fecha       = document.getElementById('fecha').value;
+      const vehiculo    = document.getElementById('vehiculo').value;
+      const numeroSerie = document.getElementById('numeroSerie').value;
+      const trabajador  = document.getElementById('trabajador').value;
+      const mensaje     = document.getElementById('mensaje');
+      const modal       = document.getElementById('modalCargando');
 
-    async function enviarDatos() {
-      const btn     = document.getElementById('btnEnviar');
-      const modal   = document.getElementById('modalCargando');
-      const mensaje = document.getElementById('mensaje');
-
-      const data = {
-        fecha:       document.getElementById('fecha').value,
-        vehiculo:    document.getElementById('vehiculo').value,
-        numeroSerie: document.getElementById('numeroSerie').value,
-        trabajador:  document.getElementById('trabajador').value
-      };
-
-      if (Object.values(data).some(v => !v)) {
-        mostrarMensaje('❌ Todos los campos son obligatorios', 'red');
+      if (!fecha || !vehiculo || !numeroSerie || !trabajador) {
+        mostrarMensaje("❌ Todos los campos son obligatorios", "red");
         return;
       }
 
-      try {
-        btn.disabled = true;
-        modal.style.display = 'block';
-        mensaje.innerText = '';
+      // Mostrar ventana emergente
+      modal.style.display = 'block';
+      mensaje.innerText = '';
 
-        const res  = await fetch(WEB_APP_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-        const json = await res.json();
-
-        if (json.result === 'success') {
-          mostrarMensaje('✅ Registro enviado correctamente', 'green');
-          limpiarFormulario();
-        } else {
-          throw new Error('Respuesta inesperada');
+      fetch('https://script.google.com/macros/s/AKfycbxfutf3qMEu8kxt0VKnCjMd_WslfwQl4aMMED7gRxSctkzvDLvt0s3olNb2ajnDojX6/exec', {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify({ fecha, vehiculo, numeroSerie, trabajador }),
+        headers: {
+          'Content-Type': 'application/json'
         }
-      } catch (err) {
-        mostrarMensaje('❌ Error: ' + err.message, 'red');
-        console.error(err);
-      } finally {
-        btn.disabled = false;
+      })
+      .then(() => {
+        mostrarMensaje("✅ Registro enviado correctamente", "green");
+        limpiarFormulario();
+      })
+      .catch(error => {
+        mostrarMensaje("❌ Error de conexión: " + error.message, "red");
+        console.error(error);
+      })
+      .finally(() => {
+        // Ocultar ventana emergente
         modal.style.display = 'none';
-      }
+      });
     }
 
     function mostrarMensaje(texto, color) {
-      const mensaje = document.getElementById('mensaje');
+      const mensaje = document.getElementById("mensaje");
       mensaje.innerText = texto;
       mensaje.style.color = color;
     }
 
     function limpiarFormulario() {
-      ['fecha','vehiculo','numeroSerie','trabajador']
-        .forEach(id => document.getElementById(id).value = '');
+      document.getElementById('fecha').value = "";
+      document.getElementById('vehiculo').value = "";
+      document.getElementById('numeroSerie').value = "";
+      document.getElementById('trabajador').value = "";
     }
   </script>
 </body>
 </html>
-    </script>
-</body>
-</html>
-
