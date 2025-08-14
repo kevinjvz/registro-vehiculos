@@ -1,118 +1,92 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Registro de Vehículo</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 40px;
-    }
-    label {
-      display: block;
-      margin-top: 10px;
-    }
-    input {
-      width: 300px;
-      padding: 8px;
-      margin-top: 5px;
-    }
-    button {
-      margin-top: 20px;
-      padding: 10px 20px;
-    }
-    #mensaje {
-      margin-top: 20px;
-      font-weight: bold;
-    }
-    #cargando {
-      margin-top: 20px;
-      font-style: italic;
-      color: #555;
-      display: none;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Registro de Vehículo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        input {
+            width: 300px;
+            padding: 8px;
+            margin-top: 5px;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+        }
+        #mensaje {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-  <h2>Formulario de Registro</h2>
+    <h2>Formulario de Registro</h2>
 
-  <label for="fecha">Fecha:</label>
-  <input type="date" id="fecha" required>
+    <label for="fecha">Fecha:</label>
+    <input type="date" id="fecha" required>
 
-  <label for="vehiculo">Vehículo:</label>
-  <input type="text" id="vehiculo" required>
+    <label for="vehiculo">Vehículo:</label>
+    <input type="text" id="vehiculo" required>
 
-  <label for="numeroSerie">Número de Serie:</label>
-  <input type="text" id="numeroSerie" required>
+    <label for="numeroSerie">Número de Serie:</label>
+    <input type="text" id="numeroSerie" required>
 
-  <label for="trabajador">Trabajador:</label>
-  <input type="text" id="trabajador" required>
+    <label for="trabajador">Trabajador:</label>
+    <input type="text" id="trabajador" required>
 
-  <button id="btnEnviar" onclick="enviarDatos()">Enviar</button>
+    <button onclick="enviarDatos()">Enviar</button>
+    <div id="mensaje"></div>
 
-  <!-- Mensaje de carga -->
-  <div id="cargando">⏳ Enviando datos…</div>
+    <script>
+        function enviarDatos() {
+            const fecha = document.getElementById('fecha').value;
+            const vehiculo = document.getElementById('vehiculo').value;
+            const numeroSerie = document.getElementById('numeroSerie').value;
+            const trabajador = document.getElementById('trabajador').value;
 
-  <!-- Mensaje final -->
-  <div id="mensaje"></div>
+            if (!fecha || !vehiculo || !numeroSerie || !trabajador) {
+                mostrarMensaje("❌ Todos los campos son obligatorios", "red");
+                return;
+            }
 
-  <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/TU_DEPLOY_ID/exec';
-
-    async function enviarDatos() {
-      const btn      = document.getElementById('btnEnviar');
-      const cargando = document.getElementById('cargando');
-      const msg      = document.getElementById('mensaje');
-
-      const data = {
-        fecha:      document.getElementById('fecha').value,
-        vehiculo:   document.getElementById('vehiculo').value,
-        numeroSerie:document.getElementById('numeroSerie').value,
-        trabajador: document.getElementById('trabajador').value
-      };
-
-      if (Object.values(data).some(v => !v)) {
-        mostrarMensaje('❌ Todos los campos son obligatorios', 'red');
-        return;
-      }
-
-      try {
-        btn.disabled = true;
-        cargando.style.display = 'block';
-        msg.innerText = '';
-
-        const res  = await fetch(WEB_APP_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-        const json = await res.json();
-
-        if (json.result === 'success') {
-          mostrarMensaje('✅ Registro enviado correctamente', 'green');
-          limpiarFormulario();
-        } else {
-          throw new Error('Respuesta inesperada');
+            fetch('https://script.google.com/macros/s/AKfycbxfutf3qMEu8kxt0VKnCjMd_WslfwQl4aMMED7gRxSctkzvDLvt0s3olNb2ajnDojX6/exec', {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({ fecha, vehiculo, numeroSerie, trabajador }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(() => {
+                mostrarMensaje("✅ Registro enviado correctamente", "green");
+                limpiarFormulario();
+            })
+            .catch(error => {
+                mostrarMensaje("❌ Error de conexión: " + error.message, "red");
+                console.error(error);
+            });
         }
-      } catch (err) {
-        mostrarMensaje('❌ Error: ' + err.message, 'red');
-        console.error(err);
-      } finally {
-        btn.disabled = false;
-        cargando.style.display = 'none';
-      }
-    }
 
-    function mostrarMensaje(texto, color) {
-      const mensaje = document.getElementById('mensaje');
-      mensaje.innerText = texto;
-      mensaje.style.color = color;
-    }
+        function mostrarMensaje(texto, color) {
+            const mensaje = document.getElementById("mensaje");
+            mensaje.innerText = texto;
+            mensaje.style.color = color;
+        }
 
-    function limpiarFormulario() {
-      ['fecha','vehiculo','numeroSerie','trabajador']
-        .forEach(id => document.getElementById(id).value = '');
-    }
-  </script>
+        function limpiarFormulario() {
+            document.getElementById('fecha').value = "";
+            document.getElementById('vehiculo').value = "";
+            document.getElementById('numeroSerie').value = "";
+            document.getElementById('trabajador').value = "";
+        }
+    </script>
 </body>
 </html>
