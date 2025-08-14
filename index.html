@@ -50,9 +50,7 @@
   <label for="serie">Número de Serie:</label>
   <input type="text" id="serie" required>
 
-  <div id="campoMedidaContainer">
-    <!-- Se insertará HRS o KM aquí -->
-  </div>
+  <div id="campoMedidaContainer"></div>
 
   <label for="estado">Estado del Equipo:</label>
   <select id="estado" required>
@@ -107,12 +105,11 @@
       mensaje.innerText = '';
 
       try {
-        // Verificar valor anterior (esto requiere que tu Web App lo permita)
-        const urlConsulta = `https://script.google.com/macros/s/AKfycbxfutf3qMEu8kxt0VKnCjMd_WslfwQl4aMMED7gRxSctkzvDLvt0s3olNb2ajnDojX6/exec?serie=${encodeURIComponent(serie)}`;
+        const urlConsulta = `https://script.google.com/macros/s/AKfycbxoXABbnPBbXjbw31QtWOE60FJ-uNTqpFaamMEp32Q5WV-37-c2h3GXk6gxHnrf1S9A/exec?serie=${encodeURIComponent(serie)}`;
         const respuesta = await fetch(urlConsulta);
-        const datos = await respuesta.json(); // ← tu script debe devolver JSON
+        const datos = await respuesta.json();
 
-        const valorAnterior = datos.valor; // ← debe devolver { valor: 123 }
+        const valorAnterior = datos.valor;
 
         if (parseInt(valorAnterior) === parseInt(medida)) {
           mostrarMensaje(`⚠️ El valor de ${tipoMedida} es igual al día anterior para este equipo`, "orange");
@@ -120,16 +117,20 @@
           return;
         }
 
-        // Enviar si todo está bien
-       await fetch('https://script.google.com/macros/s/AKfycbxoXABbnPBbXjbw31QtWOE60FJ-uNTqpFaamMEp32Q5WV-37-c2h3GXk6gxHnrf1S9A/exec', {
+        const envio = await fetch('https://script.google.com/macros/s/AKfycbxoXABbnPBbXjbw31QtWOE60FJ-uNTqpFaamMEp32Q5WV-37-c2h3GXk6gxHnrf1S9A/exec', {
           method: 'POST',
-          mode: 'no-cors',
+          mode: 'cors',
           body: JSON.stringify({ fecha, equipo, frente, serie, medida, estado }),
           headers: { 'Content-Type': 'application/json' }
         });
 
-        mostrarMensaje("✅ Registro enviado correctamente", "green");
-        limpiarFormulario();
+        const resultado = await envio.json();
+        if (resultado.success) {
+          mostrarMensaje("✅ Registro enviado correctamente", "green");
+          limpiarFormulario();
+        } else {
+          mostrarMensaje("❌ Error: " + resultado.message, "red");
+        }
       } catch (error) {
         mostrarMensaje("❌ Error de conexión: " + error.message, "red");
         console.error(error);
@@ -155,4 +156,5 @@
   </script>
 </body>
 </html>
+
 
