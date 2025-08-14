@@ -94,9 +94,18 @@
       const serie      = document.getElementById('serie').value;
       const trabajador = document.getElementById('trabajador').value;
       const estado     = document.getElementById('estado').value;
-      const medida     = equipo === 'Vehículo' ? document.getElementById('hrs').value : document.getElementById('km').value;
-      const mensaje    = document.getElementById('mensaje');
-      const modal      = document.getElementById('modalCargando');
+
+      let medida = "";
+      if (equipo === "Vehículo") {
+        const hrsInput = document.getElementById('hrs');
+        medida = hrsInput ? hrsInput.value : "";
+      } else if (equipo === "Maquinaria") {
+        const kmInput = document.getElementById('km');
+        medida = kmInput ? kmInput.value : "";
+      }
+
+      const mensaje = document.getElementById('mensaje');
+      const modal = document.getElementById('modalCargando');
 
       if (!fecha || !equipo || !frente || !serie || !trabajador || !estado || !medida) {
         mostrarMensaje("❌ Todos los campos son obligatorios", "red");
