@@ -113,13 +113,14 @@
       modal.style.display = 'block';
       mensaje.innerText = '';
 
-      const datos = { fecha, equipo, frente, serie, medida, trabajador, estado };
+      const datos = {
+        fecha, equipo, frente, serie, medida, trabajador, estado
+      };
 
       fetch('https://script.google.com/macros/s/AKfycbxfutf3qMEu8kxt0VKnCjMd_WslfwQl4aMMED7gRxSctkzvDLvt0s3olNb2ajnDojX6/exec', {
         method: 'POST',
-        mode: 'no-cors',
-        body: JSON.stringify(datos),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams(datos)
       })
       .then(() => {
         mostrarMensaje("✅ Registro enviado correctamente", "green");
