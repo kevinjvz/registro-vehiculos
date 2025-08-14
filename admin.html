@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -14,12 +13,25 @@
       height: 600px;
       border: 1px solid #ccc;
     }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+    }
   </style>
 </head>
 <body>
   <h2>Panel de Administración</h2>
   <p>Visualiza los registros directamente desde tu hoja de cálculo:</p>
 
-  <iframe src="https://docs.google.com/spreadsheets/d/1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI/pubhtml?widget=true&amp;headers=false"></iframe>
+  <iframe src="https://docs.google.com/spreadsheets/d/1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI/pubhtml?widget=true&headers=false"></iframe>
+
+  <button onclick="descargarExcel()">📥 Exportar a Excel</button>
+
+  <script>
+    function descargarExcel() {
+      const url = "https://docs.google.com/spreadsheets/d/1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI/export?format=xlsx";
+      window.open(url, "_blank");
+    }
+  </script>
 </body>
 </html>
