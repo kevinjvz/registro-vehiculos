@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Registro de Vehículo</title>
+  <title>Registro de Equipo</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -12,7 +12,7 @@
       display: block;
       margin-top: 10px;
     }
-    input {
+    input, select {
       width: 300px;
       padding: 8px;
       margin-top: 5px;
@@ -25,8 +25,6 @@
       margin-top: 20px;
       font-weight: bold;
     }
-
-    /* Modal de carga */
     #modalCargando {
       display: none;
       position: fixed;
@@ -57,19 +55,28 @@
   <label for="fecha">Fecha:</label>
   <input type="date" id="fecha" required>
 
-  <label for="vehiculo">Vehículo:</label>
-  <input type="text" id="vehiculo" required>
+  <label for="equipo">Equipo:</label>
+  <input type="text" id="equipo" required>
 
-  <label for="numeroSerie">Número de Serie:</label>
-  <input type="text" id="numeroSerie" required>
+  <label for="frente">Frente:</label>
+  <input type="text" id="frente" required>
+
+  <label for="serie">Número de Serie:</label>
+  <input type="text" id="serie" required>
 
   <label for="trabajador">Trabajador:</label>
   <input type="text" id="trabajador" required>
 
+  <label for="estado">Estado del equipo:</label>
+  <select id="estado" required>
+    <option value="">-- Selecciona --</option>
+    <option value="Operativo">Operativo</option>
+    <option value="No Operativo">No Operativo</option>
+  </select>
+
   <button onclick="enviarDatos()">Enviar</button>
   <div id="mensaje"></div>
 
-  <!-- Ventana emergente de carga -->
   <div id="modalCargando">
     <div id="modalContenido">
       ⏳ Enviando datos, por favor espera...
@@ -78,26 +85,27 @@
 
   <script>
     function enviarDatos() {
-      const fecha       = document.getElementById('fecha').value;
-      const vehiculo    = document.getElementById('vehiculo').value;
-      const numeroSerie = document.getElementById('numeroSerie').value;
-      const trabajador  = document.getElementById('trabajador').value;
-      const mensaje     = document.getElementById('mensaje');
-      const modal       = document.getElementById('modalCargando');
+      const fecha      = document.getElementById('fecha').value;
+      const equipo     = document.getElementById('equipo').value;
+      const frente     = document.getElementById('frente').value;
+      const serie      = document.getElementById('serie').value;
+      const trabajador = document.getElementById('trabajador').value;
+      const estado     = document.getElementById('estado').value;
+      const mensaje    = document.getElementById('mensaje');
+      const modal      = document.getElementById('modalCargando');
 
-      if (!fecha || !vehiculo || !numeroSerie || !trabajador) {
+      if (!fecha || !equipo || !frente || !serie || !trabajador || !estado) {
         mostrarMensaje("❌ Todos los campos son obligatorios", "red");
         return;
       }
 
-      // Mostrar ventana emergente
       modal.style.display = 'block';
       mensaje.innerText = '';
 
       fetch('https://script.google.com/macros/s/AKfycbxfutf3qMEu8kxt0VKnCjMd_WslfwQl4aMMED7gRxSctkzvDLvt0s3olNb2ajnDojX6/exec', {
         method: 'POST',
         mode: 'no-cors',
-        body: JSON.stringify({ fecha, vehiculo, numeroSerie, trabajador }),
+        body: JSON.stringify({ fecha, equipo, frente, serie, trabajador, estado }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -111,7 +119,6 @@
         console.error(error);
       })
       .finally(() => {
-        // Ocultar ventana emergente
         modal.style.display = 'none';
       });
     }
@@ -124,14 +131,12 @@
 
     function limpiarFormulario() {
       document.getElementById('fecha').value = "";
-      document.getElementById('vehiculo').value = "";
-      document.getElementById('numeroSerie').value = "";
+      document.getElementById('equipo').value = "";
+      document.getElementById('frente').value = "";
+      document.getElementById('serie').value = "";
       document.getElementById('trabajador').value = "";
+      document.getElementById('estado').value = "";
     }
   </script>
 </body>
 </html>
-  </script>
-</body>
-</html>
-
