@@ -2,45 +2,25 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Registro de Vehículo</title>
+  <title>Registro de Equipo</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 40px;
-    }
-    label {
-      display: block;
-      margin-top: 10px;
-    }
-    input {
-      width: 300px;
-      padding: 8px;
-      margin-top: 5px;
-    }
-    button {
-      margin-top: 20px;
-      padding: 10px 20px;
-    }
-    #mensaje {
-      margin-top: 20px;
-      font-weight: bold;
-    }
+    body { font-family: Arial; margin: 40px; }
+    label { display: block; margin-top: 10px; }
+    input, select { width: 300px; padding: 8px; margin-top: 5px; }
+    button { margin-top: 20px; padding: 10px 20px; }
+    #mensaje { margin-top: 20px; font-weight: bold; }
 
-    /* Modal de carga */
     #modalCargando {
       display: none;
       position: fixed;
       z-index: 999;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
       background-color: rgba(0,0,0,0.5);
     }
     #modalContenido {
       position: absolute;
-      top: 50%;
-      left: 50%;
+      top: 50%; left: 50%;
       transform: translate(-50%, -50%);
       background: white;
       padding: 30px;
@@ -52,68 +32,110 @@
   </style>
 </head>
 <body>
-  <h2>Formulario de Registro</h2>
+  <h2>Formulario de Registro de Equipo</h2>
 
   <label for="fecha">Fecha:</label>
   <input type="date" id="fecha" required>
 
-  <label for="vehiculo">Vehículo:</label>
-  <input type="text" id="vehiculo" required>
+  <label for="equipo">Equipo:</label>
+  <select id="equipo" onchange="actualizarCampoMedida()" required>
+    <option value="">-- Selecciona --</option>
+    <option value="Maquinaria">Maquinaria</option>
+    <option value="Vehículo">Vehículo</option>
+  </select>
 
-  <label for="numeroSerie">Número de Serie:</label>
-  <input type="text" id="numeroSerie" required>
+  <label for="frente">Frente:</label>
+  <input type="text" id="frente" required>
 
-  <label for="trabajador">Trabajador:</label>
-  <input type="text" id="trabajador" required>
+  <label for="serie">Número de Serie:</label>
+  <input type="text" id="serie" required>
 
-  <button onclick="enviarDatos()">Enviar</button>
+  <div id="campoMedidaContainer">
+    <!-- Se insertará HRS o KM aquí -->
+  </div>
+
+  <label for="estado">Estado del Equipo:</label>
+  <select id="estado" required>
+    <option value="">-- Selecciona --</option>
+    <option value="Operativo">Operativo</option>
+    <option value="No Operativo">No Operativo</option>
+  </select>
+
+  <button onclick="verificarYEnviar()">Enviar</button>
   <div id="mensaje"></div>
 
-  <!-- Ventana emergente de carga -->
   <div id="modalCargando">
-    <div id="modalContenido">
-      ⏳ Enviando datos, por favor espera...
-    </div>
+    <div id="modalContenido">⏳ Enviando datos, por favor espera...</div>
   </div>
 
   <script>
-    function enviarDatos() {
-      const fecha       = document.getElementById('fecha').value;
-      const vehiculo    = document.getElementById('vehiculo').value;
-      const numeroSerie = document.getElementById('numeroSerie').value;
-      const trabajador  = document.getElementById('trabajador').value;
-      const mensaje     = document.getElementById('mensaje');
-      const modal       = document.getElementById('modalCargando');
+    function actualizarCampoMedida() {
+      const equipo = document.getElementById('equipo').value;
+      const container = document.getElementById('campoMedidaContainer');
+      container.innerHTML = '';
 
-      if (!fecha || !vehiculo || !numeroSerie || !trabajador) {
+      if (equipo === 'Maquinaria') {
+        container.innerHTML = `
+          <label for="hrs">HRS:</label>
+          <input type="number" id="hrs" required>
+        `;
+      } else if (equipo === 'Vehículo') {
+        container.innerHTML = `
+          <label for="km">KM:</label>
+          <input type="number" id="km" required>
+        `;
+      }
+    }
+
+    async function verificarYEnviar() {
+      const fecha     = document.getElementById('fecha').value;
+      const equipo    = document.getElementById('equipo').value;
+      const frente    = document.getElementById('frente').value;
+      const serie     = document.getElementById('serie').value;
+      const estado    = document.getElementById('estado').value;
+      const medida    = equipo === 'Maquinaria' ? document.getElementById('hrs').value : document.getElementById('km').value;
+      const tipoMedida= equipo === 'Maquinaria' ? 'HRS' : 'KM';
+      const mensaje   = document.getElementById('mensaje');
+      const modal     = document.getElementById('modalCargando');
+
+      if (!fecha || !equipo || !frente || !serie || !medida || !estado) {
         mostrarMensaje("❌ Todos los campos son obligatorios", "red");
         return;
       }
 
-      // Mostrar ventana emergente
       modal.style.display = 'block';
       mensaje.innerText = '';
 
-      fetch('https://script.google.com/macros/s/AKfycbxfutf3qMEu8kxt0VKnCjMd_WslfwQl4aMMED7gRxSctkzvDLvt0s3olNb2ajnDojX6/exec', {
-        method: 'POST',
-        mode: 'no-cors',
-        body: JSON.stringify({ fecha, vehiculo, numeroSerie, trabajador }),
-        headers: {
-          'Content-Type': 'application/json'
+      try {
+        // Verificar valor anterior (esto requiere que tu Web App lo permita)
+        const urlConsulta = `https://script.google.com/macros/s/AKfycbxfutf3qMEu8kxt0VKnCjMd_WslfwQl4aMMED7gRxSctkzvDLvt0s3olNb2ajnDojX6/exec?serie=${encodeURIComponent(serie)}`;
+        const respuesta = await fetch(urlConsulta);
+        const datos = await respuesta.json(); // ← tu script debe devolver JSON
+
+        const valorAnterior = datos.valor; // ← debe devolver { valor: 123 }
+
+        if (parseInt(valorAnterior) === parseInt(medida)) {
+          mostrarMensaje(`⚠️ El valor de ${tipoMedida} es igual al día anterior para este equipo`, "orange");
+          modal.style.display = 'none';
+          return;
         }
-      })
-      .then(() => {
+
+        // Enviar si todo está bien
+        await fetch('https://script.google.com/macros/s/AKfycbxfutf3qMEu8kxt0VKnCjMd_WslfwQl4aMMED7gRxSctkzvDLvt0s3olNb2ajnDojX6/exec', {
+          method: 'POST',
+          mode: 'no-cors',
+          body: JSON.stringify({ fecha, equipo, frente, serie, medida, estado }),
+          headers: { 'Content-Type': 'application/json' }
+        });
+
         mostrarMensaje("✅ Registro enviado correctamente", "green");
         limpiarFormulario();
-      })
-      .catch(error => {
+      } catch (error) {
         mostrarMensaje("❌ Error de conexión: " + error.message, "red");
         console.error(error);
-      })
-      .finally(() => {
-        // Ocultar ventana emergente
+      } finally {
         modal.style.display = 'none';
-      });
+      }
     }
 
     function mostrarMensaje(texto, color) {
@@ -124,9 +146,11 @@
 
     function limpiarFormulario() {
       document.getElementById('fecha').value = "";
-      document.getElementById('vehiculo').value = "";
-      document.getElementById('numeroSerie').value = "";
-      document.getElementById('trabajador').value = "";
+      document.getElementById('equipo').value = "";
+      document.getElementById('frente').value = "";
+      document.getElementById('serie').value = "";
+      document.getElementById('estado').value = "";
+      document.getElementById('campoMedidaContainer').innerHTML = "";
     }
   </script>
 </body>
