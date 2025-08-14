@@ -7,21 +7,44 @@
     body {
       font-family: Arial, sans-serif;
       margin: 40px;
+      text-align: center;
     }
     iframe {
       width: 100%;
       height: 600px;
       border: 1px solid #ccc;
     }
+    button {
+      margin-bottom: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
   <h2>Panel de Administración</h2>
-  <p>Visualiza los registros directamente desde tu hoja de cálculo:</p>
 
-  <iframe src="https://docs.google.com/spreadsheets/d/1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI/pubhtml?widget=true&amp;headers=false"></iframe>
+  <!-- Botón para exportar a Excel -->
+  <button onclick="exportarExcel()">Exportar a Excel</button>
+
+  <!-- Iframe con la hoja publicada -->
+  <iframe 
+    src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pubhtml?gid=0&single=true" 
+    frameborder="0">
+  </iframe>
+
+  <script>
+    function exportarExcel() {
+      window.open(
+        'https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=xlsx',
+        '_blank'
+      );
+    }
+  </script>
 </body>
 </html>
+
 
 
 
