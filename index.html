@@ -2,120 +2,70 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Registro de Vehículos</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario Google Sheets</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            padding: 20px;
-        }
-        form {
-            max-width: 400px;
-            margin: auto;
-            background: #f9f9f9;
-            padding: 15px;
-            border-radius: 8px;
-        }
-        label {
-            display: block;
-            margin-top: 10px;
+            margin: 30px;
         }
         input, button {
-            width: 100%;
+            display: block;
+            margin: 10px 0;
             padding: 8px;
-            margin-top: 5px;
-            box-sizing: border-box;
+            width: 300px;
         }
-        /* Estilo del spinner */
-        .spinner {
-            display: none;
-            text-align: center;
+        #estado {
             margin-top: 15px;
-        }
-        .spinner div {
-            width: 24px;
-            height: 24px;
-            border: 4px solid #ccc;
-            border-top: 4px solid #2196F3;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .success-message {
-            display: none;
-            color: green;
-            margin-top: 10px;
-            text-align: center;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
-<h2>Registro de Vehículos</h2>
+    <h2>Enviar datos a Google Sheets</h2>
+    <form id="miFormulario">
+        <input type="text" name="nombre" placeholder="Nombre" required>
+        <input type="email" name="correo" placeholder="Correo" required>
+        <input type="text" name="comentario" placeholder="Comentario" required>
+        <button type="submit">Enviar</button>
+    </form>
 
-<form id="registroForm">
-    <label>Nombre del Conductor:</label>
-    <input type="text" name="conductor" required>
+    <div id="estado"></div>
 
-    <label>Placa del Vehículo:</label>
-    <input type="text" name="placa" required>
+    <script>
+        const scriptURL = "https://script.google.com/macros/s/AKfycbwpeT5vCD312BVp8Lniz_DDbmRhT8fGQcpr9FGizGwKkKMFSFE6gvrgzRV7VJiPWI3h9g/exec";
+        const form = document.getElementById("miFormulario");
+        const estado = document.getElementById("estado");
 
-    <label>Hora de Entrada:</label>
-    <input type="time" name="hora" required>
+        form.addEventListener("submit", e => {
+            e.preventDefault();
 
-    <button type="submit">Enviar</button>
+            // Mostrar mensaje de cargando
+            estado.style.color = "blue";
+            estado.innerHTML = "⏳ Enviando datos, por favor espera...";
 
-    <!-- Spinner de carga -->
-    <div class="spinner" id="spinner">
-        <div></div>
-        <p>Enviando...</p>
-    </div>
-
-    <!-- Mensaje de éxito -->
-    <div class="success-message" id="successMessage">
-        ✅ Datos enviados correctamente
-    </div>
-</form>
-
-<script>
-document.getElementById("registroForm").addEventListener("submit", function(e) {
-    e.preventDefault();
-
-    let spinner = document.getElementById("spinner");
-    let successMessage = document.getElementById("successMessage");
-
-    // Mostrar spinner
-    spinner.style.display = "block";
-    successMessage.style.display = "none";
-
-    // Capturar datos del formulario
-    let formData = new FormData(this);
-
-    // URL de tu Google Apps Script (endpoint)
-    let scriptURL = "TU_URL_DE_APPS_SCRIPT";
-
-    fetch(scriptURL, { method: "POST", body: formData })
-        .then(response => {
-            if (response.ok) {
-                successMessage.style.display = "block";
-                this.reset();
-            } else {
-                alert("Error al enviar los datos");
-            }
-        })
-        .catch(error => {
-            console.error("Error:", error);
-            alert("No se pudo enviar la información");
-        })
-        .finally(() => {
-            // Ocultar spinner después de completar
-            spinner.style.display = "none";
+            fetch(scriptURL, { method: "POST", body: new FormData(form)})
+                .then(response => {
+                    if (response.ok) {
+                        estado.style.color = "green";
+                        estado.innerHTML = "✅ Datos enviados correctamente";
+                        form.reset();
+                    } else {
+                        throw new Error("Error en la respuesta");
+                    }
+                })
+                .catch(error => {
+                    estado.style.color = "red";
+                    estado.innerHTML = "❌ Error al enviar: " + error.message;
+                });
         });
-});
-</script>
+    </script>
 
 </body>
 </html>
+
+
+</body>
+</html>
+
