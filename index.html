@@ -67,6 +67,8 @@
   </div>
 
   <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycbxoXABbnPBbXjbw31QtWOE60FJ-uNTqpFaamMEp32Q5WV-37-c2h3GXk6gxHnrf1S9A/exec";
+
     function actualizarCampoMedida() {
       const equipo = document.getElementById('equipo').value;
       const container = document.getElementById('campoMedidaContainer');
@@ -105,7 +107,7 @@
       mensaje.innerText = '';
 
       try {
-        const urlConsulta = `https://script.google.com/macros/s/AKfycbxoXABbnPBbXjbw31QtWOE60FJ-uNTqpFaamMEp32Q5WV-37-c2h3GXk6gxHnrf1S9A/exec?serie=${encodeURIComponent(serie)}`;
+        const urlConsulta = `${scriptURL}?serie=${encodeURIComponent(serie)}`;
         const respuesta = await fetch(urlConsulta);
         const datos = await respuesta.json();
 
@@ -117,7 +119,7 @@
           return;
         }
 
-        const envio = await fetch('https://script.google.com/macros/s/AKfycbxoXABbnPBbXjbw31QtWOE60FJ-uNTqpFaamMEp32Q5WV-37-c2h3GXk6gxHnrf1S9A/exec', {
+        const envio = await fetch(scriptURL, {
           method: 'POST',
           mode: 'cors',
           body: JSON.stringify({ fecha, equipo, frente, serie, medida, estado }),
