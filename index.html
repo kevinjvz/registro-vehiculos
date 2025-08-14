@@ -118,10 +118,10 @@
       };
 
       fetch('https://script.google.com/macros/s/AKfycbxfutf3qMEu8kxt0VKnCjMd_WslfwQl4aMMED7gRxSctkzvDLvt0s3olNb2ajnDojX6/exec', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams(datos)
-      })
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(datos)
+})
       .then(() => {
         mostrarMensaje("✅ Registro enviado correctamente", "green");
         limpiarFormulario();
@@ -153,3 +153,4 @@
   </script>
 </body>
 </html>
+
