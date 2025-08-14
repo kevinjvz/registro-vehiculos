@@ -4,35 +4,31 @@
   <meta charset="UTF-8">
   <title>Registro de Equipo</title>
   <style>
-    body { font-family: Arial; margin: 40px; }
-    label { display: block; margin-top: 10px; }
-    input, select { width: 300px; padding: 8px; margin-top: 5px; }
-    button { margin-top: 20px; padding: 10px 20px; }
-    #mensaje { margin-top: 20px; font-weight: bold; }
-
-    #modalCargando {
-      display: none;
-      position: fixed;
-      z-index: 999;
-      left: 0; top: 0;
-      width: 100%; height: 100%;
-      background-color: rgba(0,0,0,0.5);
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
     }
-    #modalContenido {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      background: white;
-      padding: 30px;
-      border-radius: 8px;
-      text-align: center;
-      font-size: 18px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input, select {
+      width: 300px;
+      padding: 8px;
+      margin-top: 5px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+    }
+    #mensaje {
+      margin-top: 20px;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <h2>Formulario de Registro de Equipo</h2>
+  <h2>Formulario de Registro</h2>
 
   <label for="fecha">Fecha:</label>
   <input type="date" id="fecha" required>
@@ -52,6 +48,9 @@
 
   <div id="campoMedidaContainer"></div>
 
+  <label for="trabajador">Trabajador:</label>
+  <input type="text" id="trabajador" required>
+
   <label for="estado">Estado del Equipo:</label>
   <select id="estado" required>
     <option value="">-- Selecciona --</option>
@@ -59,12 +58,8 @@
     <option value="No Operativo">No Operativo</option>
   </select>
 
-  <button onclick="verificarYEnviar()">Enviar</button>
+  <button onclick="enviarDatos()">Enviar</button>
   <div id="mensaje"></div>
-
-  <div id="modalCargando">
-    <div id="modalContenido">⏳ Enviando datos, por favor espera...</div>
-  </div>
 
   <script>
     function actualizarCampoMedida() {
@@ -85,54 +80,36 @@
       }
     }
 
-    async function verificarYEnviar() {
+    function enviarDatos() {
       const fecha     = document.getElementById('fecha').value;
       const equipo    = document.getElementById('equipo').value;
       const frente    = document.getElementById('frente').value;
       const serie     = document.getElementById('serie').value;
+      const trabajador= document.getElementById('trabajador').value;
       const estado    = document.getElementById('estado').value;
       const medida    = equipo === 'Maquinaria' ? document.getElementById('hrs').value : document.getElementById('km').value;
-      const tipoMedida= equipo === 'Maquinaria' ? 'HRS' : 'KM';
-      const mensaje   = document.getElementById('mensaje');
-      const modal     = document.getElementById('modalCargando');
 
-      if (!fecha || !equipo || !frente || !serie || !medida || !estado) {
+      if (!fecha || !equipo || !frente || !serie || !trabajador || !estado || !medida) {
         mostrarMensaje("❌ Todos los campos son obligatorios", "red");
         return;
       }
 
-      modal.style.display = 'block';
-      mensaje.innerText = '';
-
-      try {
-        // Manteniendo tu conexión original
-        const urlConsulta = `https://script.google.com/macros/s/AKfycbxfutf3qMEu8kxt0VKnCjMd_WslfwQl4aMMED7gRxSctkzvDLvt0s3olNb2ajnDojX6/exec?serie=${encodeURIComponent(serie)}`;
-        const respuesta = await fetch(urlConsulta);
-        const datos = await respuesta.json();
-
-        const valorAnterior = datos.valor;
-
-        if (parseInt(valorAnterior) === parseInt(medida)) {
-          mostrarMensaje(`⚠️ El valor de ${tipoMedida} es igual al día anterior para este equipo`, "orange");
-          modal.style.display = 'none';
-          return;
+      fetch('https://script.google.com/macros/s/AKfycbxfutf3qMEu8kxt0VKnCjMd_WslfwQl4aMMED7gRxSctkzvDLvt0s3olNb2ajnDojX6/exec', {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify({ fecha, equipo, frente, serie, medida, trabajador, estado }),
+        headers: {
+          'Content-Type': 'application/json'
         }
-
-        await fetch('https://script.google.com/macros/s/AKfycbxfutf3qMEu8kxt0VKnCjMd_WslfwQl4aMMED7gRxSctkzvDLvt0s3olNb2ajnDojX6/exec', {
-          method: 'POST',
-          mode: 'no-cors', // ← Manteniendo tu configuración original
-          body: JSON.stringify({ fecha, equipo, frente, serie, medida, estado }),
-          headers: { 'Content-Type': 'application/json' }
-        });
-
+      })
+      .then(() => {
         mostrarMensaje("✅ Registro enviado correctamente", "green");
         limpiarFormulario();
-      } catch (error) {
+      })
+      .catch(error => {
         mostrarMensaje("❌ Error de conexión: " + error.message, "red");
         console.error(error);
-      } finally {
-        modal.style.display = 'none';
-      }
+      });
     }
 
     function mostrarMensaje(texto, color) {
@@ -146,6 +123,7 @@
       document.getElementById('equipo').value = "";
       document.getElementById('frente').value = "";
       document.getElementById('serie').value = "";
+      document.getElementById('trabajador').value = "";
       document.getElementById('estado').value = "";
       document.getElementById('campoMedidaContainer').innerHTML = "";
     }
