@@ -2,70 +2,91 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formulario Google Sheets</title>
+    <title>Registro de Vehículo</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 30px;
+            margin: 40px;
         }
-        input, button {
+        label {
             display: block;
-            margin: 10px 0;
-            padding: 8px;
-            width: 300px;
+            margin-top: 10px;
         }
-        #estado {
-            margin-top: 15px;
+        input {
+            width: 300px;
+            padding: 8px;
+            margin-top: 5px;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+        }
+        #mensaje {
+            margin-top: 20px;
             font-weight: bold;
         }
     </style>
 </head>
 <body>
+    <h2>Formulario de Registro</h2>
 
-    <h2>Enviar datos a Google Sheets</h2>
-    <form id="miFormulario">
-        <input type="text" name="nombre" placeholder="Nombre" required>
-        <input type="email" name="correo" placeholder="Correo" required>
-        <input type="text" name="comentario" placeholder="Comentario" required>
-        <button type="submit">Enviar</button>
-    </form>
+    <label for="fecha">Fecha:</label>
+    <input type="date" id="fecha" required>
 
-    <div id="estado"></div>
+    <label for="vehiculo">Vehículo:</label>
+    <input type="text" id="vehiculo" required>
+
+    <label for="numeroSerie">Número de Serie:</label>
+    <input type="text" id="numeroSerie" required>
+
+    <label for="trabajador">Trabajador:</label>
+    <input type="text" id="trabajador" required>
+
+    <button onclick="enviarDatos()">Enviar</button>
+    <div id="mensaje"></div>
 
     <script>
-        const scriptURL = "https://script.google.com/macros/s/AKfycbwpeT5vCD312BVp8Lniz_DDbmRhT8fGQcpr9FGizGwKkKMFSFE6gvrgzRV7VJiPWI3h9g/exec";
-        const form = document.getElementById("miFormulario");
-        const estado = document.getElementById("estado");
+        function enviarDatos() {
+            const fecha = document.getElementById('fecha').value;
+            const vehiculo = document.getElementById('vehiculo').value;
+            const numeroSerie = document.getElementById('numeroSerie').value;
+            const trabajador = document.getElementById('trabajador').value;
 
-        form.addEventListener("submit", e => {
-            e.preventDefault();
+            if (!fecha || !vehiculo || !numeroSerie || !trabajador) {
+                mostrarMensaje("❌ Todos los campos son obligatorios", "red");
+                return;
+            }
 
-            // Mostrar mensaje de cargando
-            estado.style.color = "blue";
-            estado.innerHTML = "⏳ Enviando datos, por favor espera...";
+            fetch('https://script.google.com/macros/s/AKfycbxfutf3qMEu8kxt0VKnCjMd_WslfwQl4aMMED7gRxSctkzvDLvt0s3olNb2ajnDojX6/exec', {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({ fecha, vehiculo, numeroSerie, trabajador }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(() => {
+                mostrarMensaje("✅ Registro enviado correctamente", "green");
+                limpiarFormulario();
+            })
+            .catch(error => {
+                mostrarMensaje("❌ Error de conexión: " + error.message, "red");
+                console.error(error);
+            });
+        }
 
-            fetch(scriptURL, { method: "POST", body: new FormData(form)})
-                .then(response => {
-                    if (response.ok) {
-                        estado.style.color = "green";
-                        estado.innerHTML = "✅ Datos enviados correctamente";
-                        form.reset();
-                    } else {
-                        throw new Error("Error en la respuesta");
-                    }
-                })
-                .catch(error => {
-                    estado.style.color = "red";
-                    estado.innerHTML = "❌ Error al enviar: " + error.message;
-                });
-        });
+        function mostrarMensaje(texto, color) {
+            const mensaje = document.getElementById("mensaje");
+            mensaje.innerText = texto;
+            mensaje.style.color = color;
+        }
+
+        function limpiarFormulario() {
+            document.getElementById('fecha').value = "";
+            document.getElementById('vehiculo').value = "";
+            document.getElementById('numeroSerie').value = "";
+            document.getElementById('trabajador').value = "";
+        }
     </script>
-
 </body>
 </html>
-
-
-</body>
-</html>
-
