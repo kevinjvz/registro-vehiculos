@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Registro de Equipo</title>
+  <title>Registro de Vehículo</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -12,7 +12,7 @@
       display: block;
       margin-top: 10px;
     }
-    input, select {
+    input {
       width: 300px;
       padding: 8px;
       margin-top: 5px;
@@ -25,6 +25,30 @@
       margin-top: 20px;
       font-weight: bold;
     }
+
+    /* Modal de carga */
+    #modalCargando {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+    #modalContenido {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 18px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
   </style>
 </head>
 <body>
@@ -33,71 +57,47 @@
   <label for="fecha">Fecha:</label>
   <input type="date" id="fecha" required>
 
-  <label for="equipo">Equipo:</label>
-  <select id="equipo" onchange="actualizarCampoMedida()" required>
-    <option value="">-- Selecciona --</option>
-    <option value="Maquinaria">Maquinaria</option>
-    <option value="Vehículo">Vehículo</option>
-  </select>
+  <label for="vehiculo">Vehículo:</label>
+  <input type="text" id="vehiculo" required>
 
-  <label for="frente">Frente:</label>
-  <input type="text" id="frente" required>
-
-  <label for="serie">Número de Serie:</label>
-  <input type="text" id="serie" required>
-
-  <div id="campoMedidaContainer"></div>
+  <label for="numeroSerie">Número de Serie:</label>
+  <input type="text" id="numeroSerie" required>
 
   <label for="trabajador">Trabajador:</label>
   <input type="text" id="trabajador" required>
 
-  <label for="estado">Estado del Equipo:</label>
-  <select id="estado" required>
-    <option value="">-- Selecciona --</option>
-    <option value="Operativo">Operativo</option>
-    <option value="No Operativo">No Operativo</option>
-  </select>
-
   <button onclick="enviarDatos()">Enviar</button>
   <div id="mensaje"></div>
 
+  <!-- Ventana emergente de carga -->
+  <div id="modalCargando">
+    <div id="modalContenido">
+      ⏳ Enviando datos, por favor espera...
+    </div>
+  </div>
+
   <script>
-    function actualizarCampoMedida() {
-      const equipo = document.getElementById('equipo').value;
-      const container = document.getElementById('campoMedidaContainer');
-      container.innerHTML = '';
-
-      if (equipo === 'Maquinaria') {
-        container.innerHTML = `
-          <label for="hrs">HRS:</label>
-          <input type="number" id="hrs" required>
-        `;
-      } else if (equipo === 'Vehículo') {
-        container.innerHTML = `
-          <label for="km">KM:</label>
-          <input type="number" id="km" required>
-        `;
-      }
-    }
-
     function enviarDatos() {
-      const fecha     = document.getElementById('fecha').value;
-      const equipo    = document.getElementById('equipo').value;
-      const frente    = document.getElementById('frente').value;
-      const serie     = document.getElementById('serie').value;
-      const trabajador= document.getElementById('trabajador').value;
-      const estado    = document.getElementById('estado').value;
-      const medida    = equipo === 'Maquinaria' ? document.getElementById('hrs').value : document.getElementById('km').value;
+      const fecha       = document.getElementById('fecha').value;
+      const vehiculo    = document.getElementById('vehiculo').value;
+      const numeroSerie = document.getElementById('numeroSerie').value;
+      const trabajador  = document.getElementById('trabajador').value;
+      const mensaje     = document.getElementById('mensaje');
+      const modal       = document.getElementById('modalCargando');
 
-      if (!fecha || !equipo || !frente || !serie || !trabajador || !estado || !medida) {
+      if (!fecha || !vehiculo || !numeroSerie || !trabajador) {
         mostrarMensaje("❌ Todos los campos son obligatorios", "red");
         return;
       }
 
+      // Mostrar ventana emergente
+      modal.style.display = 'block';
+      mensaje.innerText = '';
+
       fetch('https://script.google.com/macros/s/AKfycbxfutf3qMEu8kxt0VKnCjMd_WslfwQl4aMMED7gRxSctkzvDLvt0s3olNb2ajnDojX6/exec', {
         method: 'POST',
         mode: 'no-cors',
-        body: JSON.stringify({ fecha, equipo, frente, serie, medida, trabajador, estado }),
+        body: JSON.stringify({ fecha, vehiculo, numeroSerie, trabajador }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -109,6 +109,10 @@
       .catch(error => {
         mostrarMensaje("❌ Error de conexión: " + error.message, "red");
         console.error(error);
+      })
+      .finally(() => {
+        // Ocultar ventana emergente
+        modal.style.display = 'none';
       });
     }
 
@@ -120,13 +124,14 @@
 
     function limpiarFormulario() {
       document.getElementById('fecha').value = "";
-      document.getElementById('equipo').value = "";
-      document.getElementById('frente').value = "";
-      document.getElementById('serie').value = "";
+      document.getElementById('vehiculo').value = "";
+      document.getElementById('numeroSerie').value = "";
       document.getElementById('trabajador').value = "";
-      document.getElementById('estado').value = "";
-      document.getElementById('campoMedidaContainer').innerHTML = "";
     }
   </script>
 </body>
 </html>
+  </script>
+</body>
+</html>
+
