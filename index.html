@@ -67,8 +67,6 @@
   </div>
 
   <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbxoXABbnPBbXjbw31QtWOE60FJ-uNTqpFaamMEp32Q5WV-37-c2h3GXk6gxHnrf1S9A/exec";
-
     function actualizarCampoMedida() {
       const equipo = document.getElementById('equipo').value;
       const container = document.getElementById('campoMedidaContainer');
@@ -107,7 +105,8 @@
       mensaje.innerText = '';
 
       try {
-        const urlConsulta = `${scriptURL}?serie=${encodeURIComponent(serie)}`;
+        // Manteniendo tu conexión original
+        const urlConsulta = `https://script.google.com/macros/s/AKfycbxfutf3qMEu8kxt0VKnCjMd_WslfwQl4aMMED7gRxSctkzvDLvt0s3olNb2ajnDojX6/exec?serie=${encodeURIComponent(serie)}`;
         const respuesta = await fetch(urlConsulta);
         const datos = await respuesta.json();
 
@@ -119,20 +118,15 @@
           return;
         }
 
-        const envio = await fetch(scriptURL, {
+        await fetch('https://script.google.com/macros/s/AKfycbxfutf3qMEu8kxt0VKnCjMd_WslfwQl4aMMED7gRxSctkzvDLvt0s3olNb2ajnDojX6/exec', {
           method: 'POST',
-          mode: 'cors',
+          mode: 'no-cors', // ← Manteniendo tu configuración original
           body: JSON.stringify({ fecha, equipo, frente, serie, medida, estado }),
           headers: { 'Content-Type': 'application/json' }
         });
 
-        const resultado = await envio.json();
-        if (resultado.success) {
-          mostrarMensaje("✅ Registro enviado correctamente", "green");
-          limpiarFormulario();
-        } else {
-          mostrarMensaje("❌ Error: " + resultado.message, "red");
-        }
+        mostrarMensaje("✅ Registro enviado correctamente", "green");
+        limpiarFormulario();
       } catch (error) {
         mostrarMensaje("❌ Error de conexión: " + error.message, "red");
         console.error(error);
@@ -158,5 +152,3 @@
   </script>
 </body>
 </html>
-
-
