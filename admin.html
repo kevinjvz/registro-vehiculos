@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -8,201 +9,17 @@
       font-family: Arial, sans-serif;
       margin: 40px;
     }
-    h2 {
-      text-align: center;
-    }
     iframe {
       width: 100%;
       height: 600px;
       border: 1px solid #ccc;
-      margin-top: 40px;
-    }
-    button {
-      margin-bottom: 20px;
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-      background-color: #2e7d32;
-      color: white;
-      border: none;
-      border-radius: 5px;
-    }
-    button:hover {
-      background-color: #1b5e20;
-    }
-    label {
-      display: block;
-      margin-top: 10px;
-    }
-    input, select {
-      width: 300px;
-      padding: 8px;
-      margin-top: 5px;
-    }
-    #mensaje {
-      margin-top: 20px;
-      font-weight: bold;
-    }
-    #modalCargando {
-      display: none;
-      position: fixed;
-      z-index: 999;
-      left: 0; top: 0;
-      width: 100%; height: 100%;
-      background-color: rgba(0,0,0,0.5);
-    }
-    #modalContenido {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      background: white;
-      padding: 30px;
-      border-radius: 8px;
-      text-align: center;
-      font-size: 18px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
     }
   </style>
 </head>
 <body>
-  <h2>Formulario de Registro de Equipo</h2>
-
-  <label for="fecha">Fecha:</label>
-  <input type="date" id="fecha" required>
-
-  <label for="equipo">Equipo:</label>
-  <select id="equipo" onchange="actualizarCampoMedida()" required>
-    <option value="">-- Selecciona --</option>
-    <option value="Maquinaria">Maquinaria</option>
-    <option value="Vehículo">Vehículo</option>
-  </select>
-
-  <label for="frente">Frente:</label>
-  <input type="text" id="frente" required>
-
-  <label for="serie">Número de Serie:</label>
-  <input type="text" id="serie" required>
-
-  <div id="campoMedidaContainer"></div>
-
-  <label for="estado">Estado del Equipo:</label>
-  <select id="estado" required>
-    <option value="">-- Selecciona --</option>
-    <option value="Operativo">Operativo</option>
-    <option value="No Operativo">No Operativo</option>
-  </select>
-
-  <button onclick="verificarYEnviar()">Enviar</button>
-  <div id="mensaje"></div>
-
-  <div id="modalCargando">
-    <div id="modalContenido">⏳ Enviando datos, por favor espera...</div>
-  </div>
-
   <h2>Panel de Administración</h2>
-  <button onclick="exportarExcel()">Exportar a Excel</button>
+  <p>Visualiza los registros directamente desde tu hoja de cálculo:</p>
 
-  <iframe 
-    src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pubhtml?gid=0&single=true" 
-    frameborder="0">
-  </iframe>
-
-  <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbxfutf3qMEu8kxt0VKnCjMd_WslfwQl4aMMED7gRxSctkzvDLvt0s3olNb2ajnDojX6/exec";
-
-    function actualizarCampoMedida() {
-      const equipo = document.getElementById('equipo').value;
-      const container = document.getElementById('campoMedidaContainer');
-      container.innerHTML = '';
-
-      if (equipo === 'Maquinaria') {
-        container.innerHTML = `
-          <label for="hrs">HRS:</label>
-          <input type="number" id="hrs" required>
-        `;
-      } else if (equipo === 'Vehículo') {
-        container.innerHTML = `
-          <label for="km">KM:</label>
-          <input type="number" id="km" required>
-        `;
-      }
-    }
-
-    async function verificarYEnviar() {
-      const fecha     = document.getElementById('fecha').value;
-      const equipo    = document.getElementById('equipo').value;
-      const frente    = document.getElementById('frente').value;
-      const serie     = document.getElementById('serie').value;
-      const estado    = document.getElementById('estado').value;
-      const medida    = equipo === 'Maquinaria' ? document.getElementById('hrs').value : document.getElementById('km').value;
-      const tipoMedida= equipo === 'Maquinaria' ? 'HRS' : 'KM';
-      const mensaje   = document.getElementById('mensaje');
-      const modal     = document.getElementById('modalCargando');
-
-      if (!fecha || !equipo || !frente || !serie || !medida || !estado) {
-        mostrarMensaje("❌ Todos los campos son obligatorios", "red");
-        return;
-      }
-
-      modal.style.display = 'block';
-      mensaje.innerText = '';
-
-      try {
-        const urlConsulta = `${scriptURL}?serie=${encodeURIComponent(serie)}`;
-        const respuesta = await fetch(urlConsulta);
-        const datos = await respuesta.json();
-
-        const valorAnterior = datos.valor;
-
-        if (parseInt(valorAnterior) === parseInt(medida)) {
-          mostrarMensaje(`⚠️ El valor de ${tipoMedida} es igual al día anterior para este equipo`, "orange");
-          modal.style.display = 'none';
-          return;
-        }
-
-        const envio = await fetch(scriptURL, {
-          method: 'POST',
-          mode: 'cors',
-          body: JSON.stringify({ fecha, equipo, frente, serie, medida, estado }),
-          headers: { 'Content-Type': 'application/json' }
-        });
-
-        const resultado = await envio.json();
-        if (resultado.status === "success") {
-          mostrarMensaje("✅ Registro guardado correctamente", "green");
-          limpiarFormulario();
-        } else {
-          mostrarMensaje("❌ Error: " + resultado.message, "red");
-        }
-      } catch (error) {
-        mostrarMensaje("❌ Error de conexión: " + error.message, "red");
-        console.error(error);
-      } finally {
-        modal.style.display = 'none';
-      }
-    }
-
-    function mostrarMensaje(texto, color) {
-      const mensaje = document.getElementById("mensaje");
-      mensaje.innerText = texto;
-      mensaje.style.color = color;
-    }
-
-    function limpiarFormulario() {
-      document.getElementById('fecha').value = "";
-      document.getElementById('equipo').value = "";
-      document.getElementById('frente').value = "";
-      document.getElementById('serie').value = "";
-      document.getElementById('estado').value = "";
-      document.getElementById('campoMedidaContainer').innerHTML = "";
-    }
-
-    function exportarExcel() {
-      window.open(
-        'https://docs.google.com/spreadsheets/d/1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI/export?format=xlsx',
-        '_blank'
-      );
-    }
-  </script>
+  <iframe src="https://docs.google.com/spreadsheets/d/1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI/pubhtml?widget=true&amp;headers=false"></iframe>
 </body>
 </html>
