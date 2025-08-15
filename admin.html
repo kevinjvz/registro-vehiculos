@@ -23,17 +23,20 @@
       margin-top: 20px;
       padding: 10px 20px;
       font-size: 16px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
   <h2>Panel de Administración</h2>
-  <p>Visualiza los registros directamente desde tu hoja de cálculo:</p>
+  <p>Visualiza los registros directamente desde la hoja de cálculo:</p>
 
   <div id="loader">⏳ Cargando registros...</div>
 
-  <iframe id="tabla" src="https://docs.google.com/spreadsheets/d/1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI/pubhtml?widget=true&headers=false"></iframe>
+  <!-- Tu enlace de publicación web -->
+  <iframe id="tabla" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pubhtml?widget=true&headers=false"></iframe>
 
+  <!-- Botón para exportar a Excel -->
   <button onclick="descargarExcel()">📥 Exportar a Excel</button>
 
   <script>
@@ -44,7 +47,8 @@
     };
 
     function descargarExcel() {
-      const url = "https://docs.google.com/spreadsheets/d/1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI/export?format=xlsx";
+      // Usamos la parte de ID público que empieza después de "/d/e/"
+      const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/export?format=xlsx";
       window.open(url, "_blank");
     }
   </script>
