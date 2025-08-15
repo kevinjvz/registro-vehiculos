@@ -3,54 +3,84 @@
 <head>
   <meta charset="UTF-8">
   <title>Panel de Administración</title>
+  <!-- jQuery + DataTables CSS/JS -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 40px;
+    }
+    h2 {
+      margin-bottom: 10px;
     }
     #loader {
       font-size: 18px;
       color: #555;
       margin-bottom: 20px;
     }
-    iframe {
+    table {
       width: 100%;
-      height: 600px;
-      border: 1px solid #ccc;
-      display: none;
-    }
-    button {
-      margin-top: 20px;
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
     }
   </style>
 </head>
 <body>
   <h2>Panel de Administración</h2>
-  <p>Visualiza los registros directamente desde la hoja de cálculo:</p>
+  <p>Filtra, busca y exporta tus registros.</p>
 
   <div id="loader">⏳ Cargando registros...</div>
 
-  <!-- Tu enlace de publicación web -->
-  <iframe id="tabla" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pubhtml?widget=true&headers=false"></iframe>
-
-  <!-- Botón para exportar a Excel -->
-  <button onclick="descargarExcel()">📥 Exportar a Excel</button>
+  <table id="tabla" class="display nowrap" style="display:none">
+    <thead>
+      <tr>
+        <th>Fecha</th>
+        <th>Equipo</th>
+        <th>HRS/KM</th>
+        <th>Estado</th>
+        <th>Observaciones</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
   <script>
-    const iframe = document.getElementById("tabla");
-    iframe.onload = function () {
-      document.getElementById("loader").style.display = "none";
-      iframe.style.display = "block";
-    };
+    $(document).ready(function(){
+      // URL CSV pública de tu hoja
+      const urlCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
+      
+      fetch(urlCSV)
+        .then(res => res.text())
+        .then(csv => {
+          const filas = csv.trim().split("\n").map(r => r.split(","));
+          const encabezados = filas.shift();
+          const tbody = $("#tabla tbody");
+          filas.forEach(f => {
+            tbody.append(`<tr>${f.map(c => `<td>${c}</td>`).join("")}</tr>`);
+          });
 
-    function descargarExcel() {
-      // Usamos la parte de ID público que empieza después de "/d/e/"
-      const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/export?format=xlsx";
-      window.open(url, "_blank");
-    }
+          $("#loader").hide();
+          $("#tabla").show().DataTable({
+            dom: 'Bfrtip',
+            buttons: [
+              { extend: 'excelHtml5', title: 'Registros_Admin' },
+              { extend: 'csvHtml5', title: 'Registros_Admin' }
+            ],
+            pageLength: 20,
+            scrollX: true
+          });
+        })
+        .catch(err => {
+          $("#loader").text("❌ Error cargando los datos.");
+          console.error(err);
+        });
+    });
   </script>
 </body>
 </html>
+
