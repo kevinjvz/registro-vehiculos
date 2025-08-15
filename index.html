@@ -5,48 +5,117 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Registro de Equipo</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    header { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; background-color: #f5f5f5; padding: 10px 20px; margin-bottom: 20px; border-radius: 6px; }
-    .logo { max-width: 150px; height: auto; margin-right: 15px; }
-    h2 { margin: 0; text-align: center; }
-    label { display: block; margin-top: 10px; }
-    input, select { width: 100%; max-width: 400px; padding: 8px; margin-top: 5px; box-sizing: border-box; }
-    button { margin-top: 20px; padding: 10px 20px; font-size: 16px; cursor: pointer; width: 100%; max-width: 200px; }
-    #mensaje { margin-top: 20px; font-weight: bold; }
-    #modalCargando { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
-    #modalContenido { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 8px; text-align: center; font-size: 18px; box-shadow: 0 0 10px rgba(0,0,0,0.3); }
-    @media (max-width: 600px) { body { margin: 10px; } .logo { margin-right: 0; margin-bottom: 10px; max-width: 100px; } h2 { font-size: 1.5rem; width: 100%; } input, select, button { max-width: 100%; } }
+    body { 
+      font-family: Arial, sans-serif; 
+      margin: 20px; 
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      background-color: #f5f5f5;
+      padding: 10px 20px;
+      margin-bottom: 20px;
+      border-radius: 6px;
+    }
+    .logo {
+      max-width: 150px;
+      height: auto;
+      margin-right: 15px;
+    }
+    h2 {
+      margin: 0;
+      text-align: center;
+    }
+    label { 
+      display: block; 
+      margin-top: 10px; 
+    }
+    input, select { 
+      width: 100%; 
+      max-width: 400px; 
+      padding: 8px; 
+      margin-top: 5px; 
+      box-sizing: border-box;
+    }
+    button { 
+      margin-top: 20px; 
+      padding: 10px 20px; 
+      font-size: 16px;
+      cursor: pointer;
+      width: 100%;
+      max-width: 200px;
+    }
+    #mensaje { 
+      margin-top: 20px; 
+      font-weight: bold; 
+    }
+    #modalCargando {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+    #modalContenido {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 18px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+    /* Ajustes responsivos */
+    @media (max-width: 600px) {
+      body { margin: 10px; }
+      .logo {
+        margin-right: 0;
+        margin-bottom: 10px;
+        max-width: 100px;
+      }
+      h2 {
+        font-size: 1.5rem;
+        width: 100%;
+      }
+      input, select, button { max-width: 100%; }
+    }
   </style>
 </head>
 <body>
+  <!-- Encabezado con logo -->
   <header>
     <img src="logolief.jpg" alt="Logo LIEF" class="logo">
     <h2>Formulario de Registro</h2>
   </header>
 
   <label for="fecha">Fecha:</label>
-  <input type="date" id="fecha" name="fecha" required>
+  <input type="date" id="fecha" required>
 
   <label for="equipo">Equipo:</label>
-  <select id="equipo" name="equipo" onchange="actualizarCampoMedida()" required>
+  <select id="equipo" onchange="actualizarCampoMedida()" required>
     <option value="">-- Selecciona --</option>
     <option value="Vehículo">Vehículo</option>
     <option value="Maquinaria">Maquinaria</option>
   </select>
 
   <label for="frente">Frente:</label>
-  <input type="text" id="frente" name="frente" required>
+  <input type="text" id="frente" required>
 
   <label for="serie">Número de Serie:</label>
-  <input type="text" id="serie" name="serie" required>
+  <input type="text" id="serie" required>
 
   <div id="campoMedidaContainer"></div>
 
   <label for="trabajador">Trabajador:</label>
-  <input type="text" id="trabajador" name="trabajador" required>
+  <input type="text" id="trabajador" required>
 
   <label for="estado">Estado del equipo:</label>
-  <select id="estado" name="estado_equipo" required>
+  <select id="estado" required>
     <option value="">-- Selecciona --</option>
     <option value="Operativo">Operativo</option>
     <option value="No Operativo">No Operativo</option>
@@ -67,32 +136,49 @@
 
       if (equipo === 'Vehículo') {
         container.innerHTML = `
-          <label for="hrs_km">HRS:</label>
-          <input type="number" id="hrs_km" name="hrs_km" required>
+          <label for="hrs">HRS:</label>
+          <input type="number" id="hrs" required>
         `;
       } else if (equipo === 'Maquinaria') {
         container.innerHTML = `
-          <label for="hrs_km">KM:</label>
-          <input type="number" id="hrs_km" name="hrs_km" required>
+          <label for="km">KM:</label>
+          <input type="number" id="km" required>
         `;
       }
     }
 
     function enviarDatos() {
+      const fecha      = document.getElementById('fecha').value;
+      const equipo     = document.getElementById('equipo').value;
+      const frente     = document.getElementById('frente').value;
+      const serie      = document.getElementById('serie').value;
+      const trabajador = document.getElementById('trabajador').value;
+      const estado     = document.getElementById('estado').value;
+
+      let medida = "";
+      if (equipo === "Vehículo") {
+        medida = document.getElementById('hrs')?.value || "";
+      } else if (equipo === "Maquinaria") {
+        medida = document.getElementById('km')?.value || "";
+      }
+
+      if (!fecha || !equipo || !frente || !serie || !trabajador || !estado || !medida) {
+        mostrarMensaje("❌ Todos los campos son obligatorios", "red");
+        return;
+      }
+
       const modal = document.getElementById('modalCargando');
       modal.style.display = 'block';
       document.getElementById('mensaje').innerText = '';
 
-      const formData = new FormData();
-      formData.append("fecha", document.getElementById('fecha').value);
-      formData.append("equipo", document.getElementById('equipo').value);
-      formData.append("frente", document.getElementById('frente').value);
-      formData.append("serie", document.getElementById('serie').value);
-      formData.append("hrs_km", document.getElementById('hrs_km').value);
-      formData.append("trabajador", document.getElementById('trabajador').value);
-      formData.append("estado_equipo", document.getElementById('estado').value);
+      const datos = { fecha, equipo, frente, serie, medida, trabajador, estado };
 
-      fetch('TU_URL_WEB_APP', { method: 'POST', body: formData })
+      fetch('https://script.google.com/macros/s/AKfycbxfutf3qMEu8kxt0VKnCjMd_WslfwQl4aMMED7gRxSctkzvDLvt0s3olNb2ajnDojX6/exec', {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify(datos),
+        headers: { 'Content-Type': 'application/json' }
+      })
       .then(() => {
         mostrarMensaje("✅ Registro enviado correctamente", "green");
         limpiarFormulario();
@@ -113,14 +199,15 @@
     }
 
     function limpiarFormulario() {
-      document.getElementById('fecha').value = "";
-      document.getElementById('equipo').value = "";
-      document.getElementById('frente').value = "";
-      document.getElementById('serie').value = "";
-      document.getElementById('trabajador').value = "";
-      document.getElementById('estado').value = "";
+      document.getElementById('Fecha').value = "";
+      document.getElementById('Equipo').value = "";
+      document.getElementById('Frente').value = "";
+      document.getElementById('Serie').value = "";
+      document.getElementById('Trabajador').value = "";
+      document.getElementById('Estado del equipo').value = "";
       document.getElementById('campoMedidaContainer').innerHTML = "";
     }
   </script>
 </body>
 </html>
+
