@@ -11,8 +11,24 @@
     #loader {
       font-size: 18px;
       color: #555;
-      margin-bottom: 20px;
+      margin-bottom: 12px;
     }
+    .toolbar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    /* Si quieres que el botón quede fijo arriba al hacer scroll, descomenta:
+    .toolbar {
+      position: sticky;
+      top: 0;
+      background: #fff;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+      z-index: 10;
+    }
+    */
     iframe {
       width: 100%;
       height: 600px;
@@ -20,7 +36,6 @@
       display: none;
     }
     button {
-      margin-top: 20px;
       padding: 10px 20px;
       font-size: 16px;
       cursor: pointer;
@@ -33,11 +48,13 @@
 
   <div id="loader">⏳ Cargando registros...</div>
 
-  <!-- Tu enlace de publicación web -->
-  <iframe id="tabla" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pubhtml?widget=true&headers=false"></iframe>
+  <!-- Botón arriba de la tabla -->
+  <div class="toolbar">
+    <button onclick="descargarExcel()">📥 Exportar a Excel</button>
+  </div>
 
-  <!-- Botón para exportar a Excel -->
-  <button onclick="descargarExcel()">📥 Exportar a Excel</button>
+  <!-- Hoja publicada -->
+  <iframe id="tabla" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pubhtml?widget=true&headers=false"></iframe>
 
   <script>
     const iframe = document.getElementById("tabla");
@@ -47,7 +64,6 @@
     };
 
     function descargarExcel() {
-      // Usamos la parte de ID público que empieza después de "/d/e/"
       const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/export?format=xlsx";
       window.open(url, "_blank");
     }
