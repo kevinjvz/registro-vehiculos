@@ -118,13 +118,11 @@
       };
 
       fetch('https://script.google.com/macros/s/AKfycbxfutf3qMEu8kxt0VKnCjMd_WslfwQl4aMMED7gRxSctkzvDLvt0s3olNb2ajnDojX6/exec', {
-  method: 'POST',
-  mode: 'no-cors',
-  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-  body: new URLSearchParams({
-    fecha, equipo, frente, serie, medida, trabajador, estado
-  })
-});
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify(datos),
+        headers: { 'Content-Type': 'application/json' }
+      })
       .then(() => {
         mostrarMensaje("✅ Registro enviado correctamente", "green");
         limpiarFormulario();
@@ -156,5 +154,3 @@
   </script>
 </body>
 </html>
-
-
