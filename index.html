@@ -28,7 +28,7 @@
   <label for="equipo">Equipo</label>
   <input type="text" id="equipo" name="equipo" required>
 
-  <label for="frente">Frente</label>
+  <label for="frente"># Frente</label>
   <input type="text" id="frente" name="frente" required>
 
   <label for="serie">Serie</label>
@@ -68,6 +68,14 @@ function enviarDatos() {
     trabajador: document.getElementById("trabajador").value,
     estado: document.getElementById("estado").value
   };
+
+  // Validación antes de enviar
+  for (let clave in datos) {
+    if (!datos[clave]) {
+      alert(`Falta completar el campo: ${clave}`);
+      return;
+    }
+  }
 
   fetch("TU_URL_WEBAPP", {
     method: "POST",
