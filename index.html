@@ -5,33 +5,88 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Registro de Equipo</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
+    body { 
+      font-family: Arial, sans-serif; 
+      margin: 20px; 
+    }
     header {
-      display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
-      background-color: #f5f5f5; padding: 10px 20px; margin-bottom: 20px; border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      background-color: #f5f5f5;
+      padding: 10px 20px;
+      margin-bottom: 20px;
+      border-radius: 6px;
     }
-    .logo { max-width: 150px; margin-right: 15px; }
-    h2 { margin: 0; text-align: center; }
-    label { display: block; margin-top: 10px; }
-    input, select {
-      width: 100%; max-width: 400px; padding: 8px; margin-top: 5px; box-sizing: border-box;
+    .logo {
+      max-width: 150px;
+      height: auto;
+      margin-right: 15px;
     }
-    button {
-      margin-top: 20px; padding: 10px 20px; font-size: 16px; cursor: pointer;
-      width: 100%; max-width: 200px;
+    h2 {
+      margin: 0;
+      text-align: center;
     }
-    #mensaje { margin-top: 20px; font-weight: bold; }
+    label { 
+      display: block; 
+      margin-top: 10px; 
+    }
+    input, select { 
+      width: 100%; 
+      max-width: 400px; 
+      padding: 8px; 
+      margin-top: 5px; 
+      box-sizing: border-box;
+    }
+    button { 
+      margin-top: 20px; 
+      padding: 10px 20px; 
+      font-size: 16px;
+      cursor: pointer;
+      width: 100%;
+      max-width: 200px;
+    }
+    #mensaje { 
+      margin-top: 20px; 
+      font-weight: bold; 
+    }
     #modalCargando {
-      display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%;
+      display: none;
+      position: fixed;
+      z-index: 999;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
       background-color: rgba(0,0,0,0.5);
     }
     #modalContenido {
-      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      background: white; padding: 30px; border-radius: 8px; text-align: center; font-size: 18px;
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 18px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+    @media (max-width: 600px) {
+      body { margin: 10px; }
+      .logo {
+        margin-right: 0;
+        margin-bottom: 10px;
+        max-width: 100px;
+      }
+      h2 {
+        font-size: 1.5rem;
+        width: 100%;
+      }
+      input, select, button { max-width: 100%; }
     }
   </style>
 </head>
 <body>
+  <!-- Encabezado con logo -->
   <header>
     <img src="logolief.jpg" alt="Logo LIEF" class="logo">
     <h2>Formulario de Registro</h2>
@@ -48,7 +103,7 @@
   </select>
 
   <label for="frente">Frente:</label>
-  <input type="number" id="frente" required placeholder="Número de frente">
+  <input type="number" id="frente" required placeholder="Ej: 12">
 
   <label for="serie">Número de Serie:</label>
   <input type="text" id="serie" required>
@@ -80,13 +135,13 @@
 
       if (equipo === 'Vehículo') {
         container.innerHTML = `
-          <label for="km">KM usados:</label>
+          <label for="km">Kilómetros usados:</label>
           <input type="number" id="km" required placeholder="Ej: 120">
         `;
       } else if (equipo === 'Maquinaria') {
         container.innerHTML = `
           <label for="hrs">Horas de uso (HH:MM):</label>
-          <input type="time" id="hrs" required>
+          <input type="text" id="hrs" required pattern="^([0-9]{1,3}):([0-5][0-9])$" placeholder="Ej: 12:30">
         `;
       }
     }
@@ -99,14 +154,14 @@
       const trabajador = document.getElementById('trabajador').value;
       const estado     = document.getElementById('estado').value;
 
-      let hrsKm = "";
+      let medida = "";
       if (equipo === "Vehículo") {
-        hrsKm = document.getElementById('km')?.value || "";
+        medida = document.getElementById('km')?.value || "";
       } else if (equipo === "Maquinaria") {
-        hrsKm = document.getElementById('hrs')?.value || "";
+        medida = document.getElementById('hrs')?.value || "";
       }
 
-      if (!fecha || !equipo || !frente || !serie || !trabajador || !estado || !hrsKm) {
+      if (!fecha || !equipo || !frente || !serie || !trabajador || !estado || !medida) {
         mostrarMensaje("❌ Todos los campos son obligatorios", "red");
         return;
       }
@@ -115,7 +170,7 @@
       modal.style.display = 'block';
       document.getElementById('mensaje').innerText = '';
 
-      const datos = { fecha, equipo, frente, serie, hrsKm, trabajador, estado };
+      const datos = { fecha, equipo, frente, serie, medida, trabajador, estado };
 
       fetch('https://script.google.com/macros/s/AKfycbxfutf3qMEu8kxt0VKnCjMd_WslfwQl4aMMED7gRxSctkzvDLvt0s3olNb2ajnDojX6/exec', {
         method: 'POST',
@@ -154,4 +209,3 @@
   </script>
 </body>
 </html>
-
