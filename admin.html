@@ -1,39 +1,15 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <title>Panel de Administración</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 40px;
-    }
-    #loader {
-      font-size: 18px;
-      color: #555;
-      margin-bottom: 12px;
-    }
-    .toolbar {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-    iframe {
-      width: 100%;
-      height: 600px;
-      border: 1px solid #ccc;
-      display: none;
-    }
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-    } 
-    .logo {
-      max-width: 150px;
-      margin-bottom: 20px;
-    }
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    #loader { font-size: 18px; color: #555; margin-bottom: 12px; }
+    .toolbar { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 12px; }
+    iframe { width: 100%; height: 600px; border: 1px solid #ccc; display: none; }
+    button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -55,7 +31,6 @@
       document.getElementById("loader").style.display = "none";
       iframe.style.display = "block";
     };
-
     function descargarExcel() {
       const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/export?format=xlsx";
       window.open(url, "_blank");
@@ -63,7 +38,7 @@
   </script>
 </body>
 </html>
-
+</html>
 
 
 
