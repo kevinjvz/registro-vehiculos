@@ -39,7 +39,6 @@
   </style>
 </head>
 <body>
-  <!-- Encabezado -->
   <header>
     <img src="logolief.jpg" alt="Logo LIEF" class="logo">
     <h2>Formulario de Registro</h2>
@@ -73,7 +72,7 @@
     <option value="No Operativo">No Operativo</option>
   </select>
 
-  <button onclick="enviarDatos()">Enviar</button>
+  <button type="button" onclick="enviarDatos()">Enviar</button>
   <div id="mensaje"></div>
 
   <div id="modalCargando">
@@ -125,16 +124,19 @@
 
       const datos = { fecha, equipo, frente, serie, hrsKm: medida, trabajador, estado };
 
-      fetch('TU_URL_DE_DEPLOY_DEL_SCRIPT', {
+      fetch('TU_URL_WEBAPP', { // Reemplaza con la URL real del Web App
         method: 'POST',
-        mode: 'no-cors',
         body: JSON.stringify(datos),
         headers: { 'Content-Type': 'application/json' }
       })
-      .then(() => {
-        mostrarMensaje("✅ Registro enviado correctamente", "green");
-        limpiarFormulario();
-        setTimeout(() => { mostrarMensaje("", ""); }, 3000);
+      .then(res => res.text())
+      .then(texto => {
+        if (texto.includes("OK")) {
+          mostrarMensaje("✅ Registro enviado correctamente", "green");
+          limpiarFormulario();
+        } else {
+          mostrarMensaje("❌ Error en el servidor: " + texto, "red");
+        }
       })
       .catch(error => {
         mostrarMensaje("❌ Error de conexión: " + error.message, "red");
