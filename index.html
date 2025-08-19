@@ -39,6 +39,7 @@
   </style>
 </head>
 <body>
+  <!-- Encabezado -->
   <header>
     <img src="logolief.jpg" alt="Logo LIEF" class="logo">
     <h2>Formulario de Registro</h2>
@@ -72,7 +73,7 @@
     <option value="No Operativo">No Operativo</option>
   </select>
 
-  <button type="button" onclick="enviarDatos()">Enviar</button>
+  <button onclick="enviarDatos()">Enviar</button>
   <div id="mensaje"></div>
 
   <div id="modalCargando">
@@ -106,14 +107,14 @@
       const trabajador = document.getElementById('trabajador').value;
       const estado     = document.getElementById('estado').value;
 
-      let hrsKm = "";
+      let medida = "";
       if (equipo === "Vehículo") {
-        hrsKm = document.getElementById('km')?.value || "";
+        medida = document.getElementById('km')?.value || "";
       } else if (equipo === "Maquinaria") {
-        hrsKm = document.getElementById('hrs')?.value || "";
+        medida = document.getElementById('hrs')?.value || "";
       }
 
-      if (!fecha || !equipo || !frente || !serie || !trabajador || !estado || !hrsKm) {
+      if (!fecha || !equipo || !frente || !serie || !trabajador || !estado || !medida) {
         mostrarMensaje("❌ Todos los campos son obligatorios", "red");
         return;
       }
@@ -122,9 +123,9 @@
       modal.style.display = 'block';
       document.getElementById('mensaje').innerText = '';
 
-      const datos = { fecha, equipo, frente, serie, hrsKm, trabajador, estado };
+      const datos = { fecha, equipo, frente, serie, hrsKm: medida, trabajador, estado };
 
-      fetch('TU_URL_WEBAPP', {
+      fetch('TU_URL_DE_DEPLOY_DEL_SCRIPT', {
         method: 'POST',
         mode: 'no-cors',
         body: JSON.stringify(datos),
