@@ -83,12 +83,12 @@
       if (equipo === 'Vehículo') {
         container.innerHTML = `
           <label for="hrsKm">HRS (ej. 12:30):</label>
-          <input type="time" id="hrsKm" required>
+          <input type="text" id="hrsKm" placeholder="hh:mm" pattern="^([0-9]{1,2}):([0-5][0-9])$" required>
         `;
       } else if (equipo === 'Maquinaria') {
         container.innerHTML = `
           <label for="hrsKm">KM:</label>
-          <input type="number" id="hrsKm" required>
+          <input type="number" id="hrsKm" placeholder="Ej. 1500" required>
         `;
       }
     }
@@ -150,5 +150,4 @@
   </script>
 </body>
 </html>
-
 
