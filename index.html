@@ -5,83 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Registro de Equipo</title>
   <style>
-    body { 
-      font-family: Arial, sans-serif; 
-      margin: 20px; 
-    }
+    body { font-family: Arial, sans-serif; margin: 20px; }
     header {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-wrap: wrap;
-      background-color: #f5f5f5;
-      padding: 10px 20px;
-      margin-bottom: 20px;
-      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      flex-wrap: wrap; background-color: #f5f5f5; padding: 10px 20px;
+      margin-bottom: 20px; border-radius: 6px;
     }
-    .logo {
-      max-width: 150px;
-      height: auto;
-      margin-right: 15px;
+    .logo { max-width: 150px; height: auto; margin-right: 15px; }
+    h2 { margin: 0; text-align: center; }
+    label { display: block; margin-top: 10px; }
+    input, select {
+      width: 100%; max-width: 400px; padding: 8px; margin-top: 5px; box-sizing: border-box;
     }
-    h2 {
-      margin: 0;
-      text-align: center;
+    button {
+      margin-top: 20px; padding: 10px 20px; font-size: 16px;
+      cursor: pointer; width: 100%; max-width: 200px;
     }
-    label { 
-      display: block; 
-      margin-top: 10px; 
-    }
-    input, select { 
-      width: 100%; 
-      max-width: 400px; 
-      padding: 8px; 
-      margin-top: 5px; 
-      box-sizing: border-box;
-    }
-    button { 
-      margin-top: 20px; 
-      padding: 10px 20px; 
-      font-size: 16px;
-      cursor: pointer;
-      width: 100%;
-      max-width: 200px;
-    }
-    #mensaje { 
-      margin-top: 20px; 
-      font-weight: bold; 
-    }
+    #mensaje { margin-top: 20px; font-weight: bold; }
     #modalCargando {
-      display: none;
-      position: fixed;
-      z-index: 999;
-      left: 0; top: 0;
-      width: 100%; height: 100%;
-      background-color: rgba(0,0,0,0.5);
+      display: none; position: fixed; z-index: 999; left: 0; top: 0;
+      width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);
     }
     #modalContenido {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      background: white;
-      padding: 30px;
-      border-radius: 8px;
-      text-align: center;
-      font-size: 18px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
-    }
-    @media (max-width: 600px) {
-      body { margin: 10px; }
-      .logo {
-        margin-right: 0;
-        margin-bottom: 10px;
-        max-width: 100px;
-      }
-      h2 {
-        font-size: 1.5rem;
-        width: 100%;
-      }
-      input, select, button { max-width: 100%; }
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: white; padding: 30px; border-radius: 8px;
+      text-align: center; font-size: 18px; box-shadow: 0 0 10px rgba(0,0,0,0.3);
     }
   </style>
 </head>
@@ -101,8 +49,8 @@
     <option value="Maquinaria">Maquinaria</option>
   </select>
 
-  <label for="frente">Frente:</label>
-  <input type="text" id="frente" required>
+  <label for="frente">Frente (número):</label>
+  <input type="number" id="frente" required>
 
   <label for="serie">Número de Serie:</label>
   <input type="text" id="serie" required>
@@ -134,8 +82,8 @@
 
       if (equipo === 'Vehículo') {
         container.innerHTML = `
-          <label for="hrsKm">HRS:</label>
-          <input type="number" id="hrsKm" required>
+          <label for="hrsKm">HRS (ej. 12:30):</label>
+          <input type="time" id="hrsKm" required>
         `;
       } else if (equipo === 'Maquinaria') {
         container.innerHTML = `
@@ -202,3 +150,5 @@
   </script>
 </body>
 </html>
+
+
