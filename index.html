@@ -70,7 +70,6 @@
       font-size: 18px;
       box-shadow: 0 0 10px rgba(0,0,0,0.3);
     }
-    /* Ajustes responsivos */
     @media (max-width: 600px) {
       body { margin: 10px; }
       .logo {
@@ -87,7 +86,6 @@
   </style>
 </head>
 <body>
-  <!-- Encabezado con logo -->
   <header>
     <img src="logolief.jpg" alt="Logo LIEF" class="logo">
     <h2>Formulario de Registro</h2>
@@ -136,13 +134,13 @@
 
       if (equipo === 'Vehículo') {
         container.innerHTML = `
-          <label for="hrs">HRS:</label>
-          <input type="number" id="hrs" required>
+          <label for="hrsKm">HRS:</label>
+          <input type="number" id="hrsKm" required>
         `;
       } else if (equipo === 'Maquinaria') {
         container.innerHTML = `
-          <label for="km">KM:</label>
-          <input type="number" id="km" required>
+          <label for="hrsKm">KM:</label>
+          <input type="number" id="hrsKm" required>
         `;
       }
     }
@@ -154,15 +152,9 @@
       const serie      = document.getElementById('serie').value;
       const trabajador = document.getElementById('trabajador').value;
       const estado     = document.getElementById('estado').value;
+      const hrsKm      = document.getElementById('hrsKm')?.value || "";
 
-      let medida = "";
-      if (equipo === "Vehículo") {
-        medida = document.getElementById('hrs')?.value || "";
-      } else if (equipo === "Maquinaria") {
-        medida = document.getElementById('km')?.value || "";
-      }
-
-      if (!fecha || !equipo || !frente || !serie || !trabajador || !estado || !medida) {
+      if (!fecha || !equipo || !frente || !serie || !trabajador || !estado || !hrsKm) {
         mostrarMensaje("❌ Todos los campos son obligatorios", "red");
         return;
       }
@@ -171,7 +163,7 @@
       modal.style.display = 'block';
       document.getElementById('mensaje').innerText = '';
 
-      const datos = { fecha, equipo, frente, serie, medida, trabajador, estado };
+      const datos = { fecha, equipo, frente, serie, hrsKm, trabajador, estado };
 
       fetch('https://script.google.com/macros/s/AKfycbxfutf3qMEu8kxt0VKnCjMd_WslfwQl4aMMED7gRxSctkzvDLvt0s3olNb2ajnDojX6/exec', {
         method: 'POST',
@@ -210,5 +202,3 @@
   </script>
 </body>
 </html>
-
-
