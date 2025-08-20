@@ -56,7 +56,7 @@
   </select>
 
   <label for="frente">Frente:</label>
-  <input type="text" id="frente" required>
+  <input type="number" id="frente" required min="0" step="1" inputmode="numeric">
 
   <label for="serie">Número de Serie:</label>
   <input type="text" id="serie" required>
@@ -88,13 +88,13 @@
 
       if (equipo === 'Vehículo') {
         container.innerHTML = `
-          <label for="km">KM:</label>
-          <input type="number" id="km" required min="0" step="1" inputmode="numeric" autocomplete="off">
+          <label for="km">KM (kilómetros usados):</label>
+          <input type="number" id="km" required min="0" step="1" inputmode="numeric">
         `;
       } else if (equipo === 'Maquinaria') {
         container.innerHTML = `
-          <label for="hrs">HRS:</label>
-          <input type="number" id="hrs" required min="0" step="0.1" inputmode="decimal" autocomplete="off">
+          <label for="hrs">HRS (horas de uso):</label>
+          <input type="number" id="hrs" required min="0" step="0.1" inputmode="decimal">
         `;
       }
     }
@@ -125,7 +125,6 @@
 
       const datos = { fecha, equipo, frente, serie, medida, trabajador, estado };
 
-      // Mantengo no-cors como lo tienes; si quieres confirmación real, te doy la variante sin no-cors.
       fetch('https://script.google.com/macros/s/AKfycbxfutf3qMEu8kxt0VKnCjMd_WslfwQl4aMMED7gRxSctkzvDLvt0s3olNb2ajnDojX6/exec', {
         method: 'POST',
         mode: 'no-cors',
@@ -163,7 +162,6 @@
   </script>
 </body>
 </html>
-
 
 
 
