@@ -56,7 +56,7 @@
   </select>
 
   <label for="frente">Frente:</label>
-  <input type="number" id="frente" required min="0" step="1">
+  <input type="text" id="frente" required>
 
   <label for="serie">Número de Serie:</label>
   <input type="text" id="serie" required>
@@ -88,12 +88,12 @@
 
       if (equipo === 'Vehículo') {
         container.innerHTML = `
-          <label for="km">KM (usados):</label>
+          <label for="km">KM:</label>
           <input type="number" id="km" required min="0" step="1" inputmode="numeric" autocomplete="off">
         `;
       } else if (equipo === 'Maquinaria') {
         container.innerHTML = `
-          <label for="hrs">HRS (usadas):</label>
+          <label for="hrs">HRS:</label>
           <input type="number" id="hrs" required min="0" step="0.1" inputmode="decimal" autocomplete="off">
         `;
       }
@@ -107,14 +107,16 @@
       const trabajador = document.getElementById('trabajador').value;
       const estado     = document.getElementById('estado').value;
 
-      let medida = "";
+      let km = "";
+      let hrs = "";
+
       if (equipo === "Vehículo") {
-        medida = document.getElementById('km')?.value || "";
+        km = document.getElementById('km')?.value || "";
       } else if (equipo === "Maquinaria") {
-        medida = document.getElementById('hrs')?.value || "";
+        hrs = document.getElementById('hrs')?.value || "";
       }
 
-      if (!fecha || !equipo || !frente || !serie || !trabajador || !estado || !medida) {
+      if (!fecha || !equipo || !frente || !serie || !trabajador || !estado || (km === "" && hrs === "")) {
         mostrarMensaje("❌ Todos los campos son obligatorios", "red");
         return;
       }
@@ -123,9 +125,9 @@
       modal.style.display = 'block';
       document.getElementById('mensaje').innerText = '';
 
-      const datos = { fecha, equipo, frente, serie, medida, trabajador, estado };
+      const datos = { fecha, equipo, frente, serie, km, hrs, trabajador, estado };
 
-      fetch('https://script.google.com/macros/s/AKfycbxfutf3qMEu8kxt0VKnCjMd_WslfwQl4aMMED7gRxSctkzvDLvt0s3olNb2ajnDojX6/exec', {
+      fetch('TU_URL_WEBAPP', {
         method: 'POST',
         mode: 'no-cors',
         body: JSON.stringify(datos),
