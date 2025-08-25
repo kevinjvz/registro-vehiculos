@@ -23,7 +23,7 @@
   </div>
 
   <!-- 👇 Aquí va el URL de tu hoja publicada (pubhtml) -->
-  <iframe id="tabla" src="https://docs.google.com/spreadsheets/d/1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI/pubhtml?widget=true&headers=false"></iframe>
+  <iframe id="tabla" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pubhtml?widget=true&headers=false"></iframe>
 
   <script>
     const iframe = document.getElementById("tabla");
@@ -31,22 +31,13 @@
       document.getElementById("loader").style.display = "none";
       iframe.style.display = "block";
     };
-
     function descargarExcel() {
-      const url = "https://docs.google.com/spreadsheets/d/1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI/export?format=xlsx";
-
-      // Crear un enlace oculto y forzar la descarga
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "Registros.xlsx"; // Nombre del archivo descargado
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/export?format=xlsx";
+      window.open(url, "_blank");
     }
   </script>
 </body>
 </html>
-
 
 
 
