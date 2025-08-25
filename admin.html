@@ -34,7 +34,14 @@
 
     function descargarExcel() {
       const url = "https://docs.google.com/spreadsheets/d/1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI/export?format=xlsx";
-      window.open(url, "_blank");
+
+      // Crear un enlace oculto y forzar la descarga
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "Registros.xlsx"; // Nombre del archivo descargado
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
   </script>
 </body>
