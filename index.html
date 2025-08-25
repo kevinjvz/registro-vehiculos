@@ -31,6 +31,12 @@
       background: white; padding: 30px; border-radius: 8px; text-align: center;
       font-size: 18px; box-shadow: 0 0 10px rgba(0,0,0,0.3);
     }
+    @media (max-width: 600px) {
+      body { margin: 10px; }
+      .logo { margin-right: 0; margin-bottom: 10px; max-width: 100px; }
+      h2 { font-size: 1.5rem; width: 100%; }
+      input, select, button { max-width: 100%; }
+    }
   </style>
 </head>
 <body>
@@ -50,7 +56,7 @@
   </select>
 
   <label for="frente">Frente:</label>
-  <input type="number" id="frente" required min="0" step="1">
+  <input type="text" id="frente" required>
 
   <label for="serie">Número de Serie:</label>
   <input type="text" id="serie" required>
@@ -83,12 +89,12 @@
       if (equipo === 'Vehículo') {
         container.innerHTML = `
           <label for="km">KM:</label>
-          <input type="number" id="km" required min="0" step="1">
+          <input type="number" id="km" required min="0" step="1" inputmode="numeric" autocomplete="off">
         `;
       } else if (equipo === 'Maquinaria') {
         container.innerHTML = `
           <label for="hrs">HRS:</label>
-          <input type="number" id="hrs" required min="0" step="0.1">
+          <input type="number" id="hrs" required min="0" step="0.1" inputmode="decimal" autocomplete="off">
         `;
       }
     }
@@ -101,14 +107,17 @@
       const trabajador = document.getElementById('trabajador').value;
       const estado     = document.getElementById('estado').value;
 
-      let km = "", hrs = "";
+      // 👇 Inicializamos ambos como N/A
+      let km = "N/A";
+      let hrs = "N/A";
+
       if (equipo === "Vehículo") {
-        km = document.getElementById('km')?.value || "";
+        km = document.getElementById('km')?.value || "N/A";
       } else if (equipo === "Maquinaria") {
-        hrs = document.getElementById('hrs')?.value || "";
+        hrs = document.getElementById('hrs')?.value || "N/A";
       }
 
-      if (!fecha || !equipo || !frente || !serie || !trabajador || !estado || (!km && !hrs)) {
+      if (!fecha || !equipo || !frente || !serie || !trabajador || !estado) {
         mostrarMensaje("❌ Todos los campos son obligatorios", "red");
         return;
       }
@@ -117,10 +126,10 @@
       modal.style.display = 'block';
       document.getElementById('mensaje').innerText = '';
 
+      // 👇 enviamos km y hrs separados
       const datos = { fecha, equipo, frente, serie, km, hrs, trabajador, estado };
 
-      // 👇 Aquí va el URL del WebApp (NO el de la hoja publicada)
-      fetch('https://script.google.com/macros/s/AKfycbxdbrnxexTVqGi_rlKVp95QAZmrTnTA1GKIricVTVnhAsK5hGj3v9kSlom-9wj1u3hc/exec', {
+      fetch('https://script.google.com/macros/s/AKfycbxfutf3qMEu8kxt0VKnCjMd_WslfwQl4aMMED7gRxSctkzvDLvt0s3olNb2ajnDojX6/exec', {
         method: 'POST',
         mode: 'no-cors',
         body: JSON.stringify(datos),
@@ -157,6 +166,7 @@
   </script>
 </body>
 </html>
+
 
 
 
