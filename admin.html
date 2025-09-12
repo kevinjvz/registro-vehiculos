@@ -10,14 +10,14 @@
     table { border-collapse: collapse; width: 100%; margin-top: 15px; }
     th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
     th { background: #f4f4f4; }
-    button { padding: 6px 12px; cursor: pointer; }
+    input, select { padding: 6px; }
+    button { padding: 10px 20px; cursor: pointer; }
     .duplicado { background-color: red; color: white; }
   </style>
 </head>
 <body>
-  <img src="logolief.jpg" alt="Logo LIEF" class="logo">
   <h2>Panel de Administración</h2>
-  <p>Visualiza y administra los registros:</p>
+  <p>Visualiza y filtra los registros directamente:</p>
 
   <div id="loader">⏳ Cargando registros...</div>
 
@@ -37,11 +37,12 @@
     let registros = [];
 
     async function cargarDatos() {
-      // 👇 URL publicada en formato CSV
+      // ⚡ CSV publicado de tu hoja
       const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
       const res = await fetch(url);
       const text = await res.text();
 
+      // Convertir CSV a array
       registros = text.split("\n").map(row => row.split(","));
       renderTable();
       document.getElementById("loader").style.display = "none";
@@ -53,12 +54,13 @@
 
       const filtro = document.getElementById("filtroEquipo").value.toLowerCase();
 
-      // 🔎 detectar duplicados en serie+km
+      // Map para detectar duplicados (clave = Serie + KM)
       const duplicados = new Map();
+
       registros.forEach((fila, idx) => {
-        if (idx === 0) return; // omitir encabezado
-        const serie = (fila[3] || "").trim().toLowerCase();
-        const km    = (fila[4] || "").trim().toLowerCase();
+        if (idx === 0) return; // ignorar encabezados
+        const serie = (fila[3] || "").trim().toLowerCase(); // Columna D = Serie
+        const km    = (fila[4] || "").trim().toLowerCase(); // Columna E = KM
         if (serie && km) {
           const clave = serie + "-" + km;
           if (duplicados.has(clave)) {
@@ -69,14 +71,15 @@
         }
       });
 
-      // encabezados + columna de acciones
-      const headers = [...registros[0], "Acciones"];
+      // Dibujar encabezados
+      const headers = registros[0];
       const ths = headers.map(c => `<th>${c}</th>`).join("");
       tabla.innerHTML += `<tr>${ths}</tr>`;
 
+      // Dibujar filas
       registros.forEach((fila, idx) => {
-        if (idx === 0) return;
-        if (filtro && fila[1].toLowerCase() !== filtro) return;
+        if (idx === 0) return; // encabezados
+        if (filtro && fila[1].toLowerCase() !== filtro) return; // Columna B = Equipo
 
         const serie = (fila[3] || "").trim().toLowerCase();
         const km    = (fila[4] || "").trim().toLowerCase();
@@ -86,32 +89,15 @@
         fila.forEach((celda, colIdx) => {
           let clase = "";
           if (duplicados.has(clave) && duplicados.get(clave).length > 1) {
-            if (colIdx === 3 || colIdx === 4) { // serie o km
+            if (colIdx === 3 || colIdx === 4) { // Solo Serie y KM
               clase = "duplicado";
             }
           }
           rowHtml += `<td class="${clase}">${celda}</td>`;
         });
 
-        // Botón eliminar (fila en hoja = idx+1)
-        rowHtml += `<td><button onclick="eliminarFila(${idx+1})">🗑️ Eliminar</button></td>`;
-
         tabla.innerHTML += `<tr>${rowHtml}</tr>`;
       });
-    }
-
-    async function eliminarFila(numFila) {
-      if (!confirm("¿Seguro que deseas eliminar esta fila?")) return;
-
-      const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv"; // 👈 reemplaza con tu WebApp
-      await fetch(url, {
-        method: "POST",
-        body: JSON.stringify({ accion: "eliminar", fila: numFila }),
-        headers: { "Content-Type": "application/json" }
-      });
-
-      alert("✅ Fila eliminada");
-      cargarDatos();
     }
 
     function descargarExcel() {
@@ -124,6 +110,7 @@
   </script>
 </body>
 </html>
+
 
 
 
