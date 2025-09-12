@@ -12,6 +12,7 @@
     th { background: #f4f4f4; }
     input, select { padding: 6px; }
     button { padding: 10px 20px; cursor: pointer; }
+    .duplicado { background-color: red; color: white; }
   </style>
 </head>
 <body>
@@ -53,16 +54,49 @@
 
       const filtro = document.getElementById("filtroEquipo").value.toLowerCase();
 
+      // Map para detectar duplicados (clave = Serie + KM)
+      const duplicados = new Map();
+
       registros.forEach((fila, idx) => {
-        if (idx === 0) {
-          // encabezados
-          const ths = fila.map(c => `<th>${c}</th>`).join("");
-          tabla.innerHTML += `<tr>${ths}</tr>`;
-        } else {
-          if (filtro && fila[1].toLowerCase() !== filtro) return; // Columna B = Equipo
-          const tds = fila.map(c => `<td>${c}</td>`).join("");
-          tabla.innerHTML += `<tr>${tds}</tr>`;
+        if (idx === 0) return; // ignorar encabezados
+        const serie = (fila[3] || "").trim().toLowerCase(); // Columna D = Serie
+        const km    = (fila[4] || "").trim().toLowerCase(); // Columna E = KM
+        if (serie && km) {
+          const clave = serie + "-" + km;
+          if (duplicados.has(clave)) {
+            duplicados.set(clave, [...duplicados.get(clave), idx]);
+          } else {
+            duplicados.set(clave, [idx]);
+          }
         }
+      });
+
+      // Dibujar encabezados
+      const headers = registros[0];
+      const ths = headers.map(c => `<th>${c}</th>`).join("");
+      tabla.innerHTML += `<tr>${ths}</tr>`;
+
+      // Dibujar filas
+      registros.forEach((fila, idx) => {
+        if (idx === 0) return; // encabezados
+        if (filtro && fila[1].toLowerCase() !== filtro) return; // Columna B = Equipo
+
+        const serie = (fila[3] || "").trim().toLowerCase();
+        const km    = (fila[4] || "").trim().toLowerCase();
+        const clave = serie + "-" + km;
+
+        let rowHtml = "";
+        fila.forEach((celda, colIdx) => {
+          let clase = "";
+          if (duplicados.has(clave) && duplicados.get(clave).length > 1) {
+            if (colIdx === 3 || colIdx === 4) { // Solo Serie y KM
+              clase = "duplicado";
+            }
+          }
+          rowHtml += `<td class="${clase}">${celda}</td>`;
+        });
+
+        tabla.innerHTML += `<tr>${rowHtml}</tr>`;
       });
     }
 
@@ -76,6 +110,7 @@
   </script>
 </body>
 </html>
+
 
 
 
