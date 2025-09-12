@@ -6,38 +6,73 @@
   <style>
     body { font-family: Arial, sans-serif; margin: 40px; }
     #loader { font-size: 18px; color: #555; margin-bottom: 12px; }
-    .toolbar { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 12px; }
-    iframe { width: 100%; height: 600px; border: 1px solid #ccc; display: none; }
-    button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+    .toolbar { display: flex; justify-content: flex-start; gap: 10px; margin-bottom: 12px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 15px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background: #f4f4f4; }
+    input, select { padding: 6px; }
+    button { padding: 10px 20px; cursor: pointer; }
   </style>
 </head>
 <body>
-  <img src="logolief.jpg" alt="Logo LIEF" class="logo">
   <h2>Panel de Administración</h2>
-  <p>Visualiza los registros directamente desde la hoja de cálculo:</p>
+  <p>Visualiza y filtra los registros directamente:</p>
 
   <div id="loader">⏳ Cargando registros...</div>
 
   <div class="toolbar">
+    <label>Filtro por Equipo:</label>
+    <select id="filtroEquipo" onchange="renderTable()">
+      <option value="">Todos</option>
+      <option value="Vehículo">Vehículo</option>
+      <option value="Maquinaria">Maquinaria</option>
+    </select>
     <button onclick="descargarExcel()">📥 Exportar a Excel</button>
   </div>
 
-  <!-- 👇 Aquí sigue tu hoja publicada en modo pubhtml para mostrar en iframe -->
-  <iframe id="tabla" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pubhtml?widget=true&headers=false"></iframe>
+  <table id="tablaDatos"></table>
 
   <script>
-    const iframe = document.getElementById("tabla");
-    iframe.onload = function () {
+    let registros = [];
+
+    async function cargarDatos() {
+      // ⚡ CSV publicado de tu hoja
+      const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
+      const res = await fetch(url);
+      const text = await res.text();
+
+      // Convertir CSV a array
+      registros = text.split("\n").map(row => row.split(","));
+      renderTable();
       document.getElementById("loader").style.display = "none";
-      iframe.style.display = "block";
-    };
+    }
+
+    function renderTable() {
+      const tabla = document.getElementById("tablaDatos");
+      tabla.innerHTML = "";
+
+      const filtro = document.getElementById("filtroEquipo").value.toLowerCase();
+
+      registros.forEach((fila, idx) => {
+        if (idx === 0) {
+          // encabezados
+          const ths = fila.map(c => `<th>${c}</th>`).join("");
+          tabla.innerHTML += `<tr>${ths}</tr>`;
+        } else {
+          if (filtro && fila[1].toLowerCase() !== filtro) return; // Columna B = Equipo
+          const tds = fila.map(c => `<td>${c}</td>`).join("");
+          tabla.innerHTML += `<tr>${tds}</tr>`;
+        }
+      });
+    }
 
     function descargarExcel() {
-      // ⚡ Usa el ID REAL de tu Google Sheet
-      const sheetId = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI";
+      const sheetId = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI"; 
       const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
       window.open(url, "_blank");
     }
+
+    cargarDatos();
   </script>
 </body>
 </html>
