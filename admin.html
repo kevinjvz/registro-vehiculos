@@ -11,13 +11,13 @@
     th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
     th { background: #f4f4f4; }
     input, select { padding: 6px; }
-    button { padding: 10px 20px; cursor: pointer; }
+    button { padding: 6px 12px; cursor: pointer; }
     .duplicado { background-color: red; color: white; }
   </style>
 </head>
 <body>
   <h2>Panel de Administración</h2>
-  <p>Visualiza y filtra los registros directamente:</p>
+  <p>Visualiza, filtra o elimina registros directamente:</p>
 
   <div id="loader">⏳ Cargando registros...</div>
 
@@ -37,7 +37,7 @@
     let registros = [];
 
     async function cargarDatos() {
-      // ⚡ CSV publicado de tu hoja
+      // ⚡ URL en CSV publicada de tu hoja
       const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
       const res = await fetch(url);
       const text = await res.text();
@@ -58,7 +58,7 @@
       const duplicados = new Map();
 
       registros.forEach((fila, idx) => {
-        if (idx === 0) return; // ignorar encabezados
+        if (idx === 0) return; // encabezados
         const serie = (fila[3] || "").trim().toLowerCase(); // Columna D = Serie
         const km    = (fila[4] || "").trim().toLowerCase(); // Columna E = KM
         if (serie && km) {
@@ -71,8 +71,8 @@
         }
       });
 
-      // Dibujar encabezados
-      const headers = registros[0];
+      // Dibujar encabezados + columna Eliminar
+      const headers = [...registros[0], "Acciones"];
       const ths = headers.map(c => `<th>${c}</th>`).join("");
       tabla.innerHTML += `<tr>${ths}</tr>`;
 
@@ -96,8 +96,25 @@
           rowHtml += `<td class="${clase}">${celda}</td>`;
         });
 
+        // Botón Eliminar (idx + 1 = fila real en hoja)
+        rowHtml += `<td><button onclick="eliminarFila(${idx + 1})">🗑️ Eliminar</button></td>`;
+
         tabla.innerHTML += `<tr>${rowHtml}</tr>`;
       });
+    }
+
+    async function eliminarFila(fila) {
+      if (!confirm("¿Seguro que quieres eliminar esta fila?")) return;
+
+      const url = "https://script.google.com/macros/s/TU-WEBAPP-ID/exec"; // ⚡ tu WebApp URL
+      const res = await fetch(url, {
+        method: "POST",
+        body: JSON.stringify({ action: "delete", row: fila }),
+        headers: { "Content-Type": "application/json" }
+      });
+      const msg = await res.text();
+      alert(msg);
+      location.reload(); // recargar tabla
     }
 
     function descargarExcel() {
