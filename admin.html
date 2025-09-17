@@ -1,113 +1,151 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Panel de Administración</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 40px; }
-    #loader { font-size: 18px; color: #555; margin-bottom: 12px; }
-    .toolbar { display: flex; justify-content: flex-start; gap: 10px; margin-bottom: 12px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 15px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-    th { background: #f4f4f4; }
-    input, select { padding: 6px; }
-    button { padding: 10px 20px; cursor: pointer; }
-    .duplicado { background-color: red; color: white; }
-  </style>
+  <meta charset="UTF-8">
+  <title>Panel de Administración</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    #loader { font-size: 18px; color: #555; margin-bottom: 12px; }
+    .toolbar { display: flex; justify-content: flex-start; gap: 10px; margin-bottom: 12px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 15px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background: #f4f4f4; }
+    input, select { padding: 6px; }
+    button { padding: 8px 16px; cursor: pointer; border: 1px solid #ccc; border-radius: 4px; background-color: #f4f4f4; }
+    button.eliminar { background-color: #dc3545; color: white; border-color: #dc3545; }
+    .duplicado { background-color: red; color: white; }
+  </style>
 </head>
 <body>
-  <h2>Panel de Administración</h2>
-  <p>Visualiza y filtra los registros directamente:</p>
+  <h2>Panel de Administración</h2>
+  <p>Visualiza y filtra los registros directamente:</p>
 
-  <div id="loader">⏳ Cargando registros...</div>
+  <div id="loader">⏳ Cargando registros...</div>
 
-  <div class="toolbar">
-    <label>Filtro por Equipo:</label>
-    <select id="filtroEquipo" onchange="renderTable()">
-      <option value="">Todos</option>
-      <option value="Vehículo">Vehículo</option>
-      <option value="Maquinaria">Maquinaria</option>
-    </select>
-    <button onclick="descargarExcel()">📥 Exportar a Excel</button>
-  </div>
+  <div class="toolbar">
+    <label>Filtro por Equipo:</label>
+    <select id="filtroEquipo" onchange="renderTable()">
+      <option value="">Todos</option>
+      <option value="Vehículo">Vehículo</option>
+      <option value="Maquinaria">Maquinaria</option>
+    </select>
+    <button onclick="descargarExcel()">📥 Exportar a Excel</button>
+  </div>
 
-  <table id="tablaDatos"></table>
+  <table id="tablaDatos"></table>
 
-  <script>
-    let registros = [];
+  <script>
+    let registros = [];
+    // ⚠️ Importante: Asegúrate de que esta URL sea la de tu WebApp desplegada
+    const webAppUrl = 'https://script.google.com/macros/s/AKfycbxdbrnxexTVqGi_rlKVp95QAZmrTnTA1GKIricVTVnhAsK5hGj3v9kSlom-9wj1u3hc/exec'; 
 
-    async function cargarDatos() {
-      // ⚡ CSV publicado de tu hoja
-      const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
-      const res = await fetch(url);
-      const text = await res.text();
+    async function cargarDatos() {
+      const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
+      const res = await fetch(url);
+      const text = await res.text();
 
-      // Convertir CSV a array
-      registros = text.split("\n").map(row => row.split(","));
-      renderTable();
-      document.getElementById("loader").style.display = "none";
-    }
+      registros = text.split("\n").map(row => row.split(","));
+      renderTable();
+      document.getElementById("loader").style.display = "none";
+    }
 
-    function renderTable() {
-      const tabla = document.getElementById("tablaDatos");
-      tabla.innerHTML = "";
+    function renderTable() {
+      const tabla = document.getElementById("tablaDatos");
+      tabla.innerHTML = "";
 
-      const filtro = document.getElementById("filtroEquipo").value.toLowerCase();
+      const filtro = document.getElementById("filtroEquipo").value.toLowerCase();
+      const duplicados = new Map();
 
-      // Map para detectar duplicados (clave = Serie + KM)
-      const duplicados = new Map();
+      registros.forEach((fila, idx) => {
+        if (idx === 0 || fila.every(c => c.trim() === '')) return;
+        const serie = (fila[3] || "").trim().toLowerCase();
+        const km = (fila[4] || "").trim().toLowerCase();
+        if (serie && km) {
+          const clave = serie + "-" + km;
+          if (duplicados.has(clave)) {
+            duplicados.set(clave, [...duplicados.get(clave), idx]);
+          } else {
+            duplicados.set(clave, [idx]);
+          }
+        }
+      });
 
-      registros.forEach((fila, idx) => {
-        if (idx === 0) return; // ignorar encabezados
-        const serie = (fila[3] || "").trim().toLowerCase(); // Columna D = Serie
-        const km    = (fila[4] || "").trim().toLowerCase(); // Columna E = KM
-        if (serie && km) {
-          const clave = serie + "-" + km;
-          if (duplicados.has(clave)) {
-            duplicados.set(clave, [...duplicados.get(clave), idx]);
-          } else {
-            duplicados.set(clave, [idx]);
-          }
-        }
-      });
+      const headers = registros[0];
+      const ths = headers.map(c => `<th>${c}</th>`).join("");
+      tabla.innerHTML += `<tr>${ths}<th>Acciones</th></tr>`;
 
-      // Dibujar encabezados
-      const headers = registros[0];
-      const ths = headers.map(c => `<th>${c}</th>`).join("");
-      tabla.innerHTML += `<tr>${ths}</tr>`;
+      registros.forEach((fila, idx) => {
+        if (idx === 0 || fila.every(c => c.trim() === '')) return;
+        if (filtro && fila[1].toLowerCase() !== filtro) return;
 
-      // Dibujar filas
-      registros.forEach((fila, idx) => {
-        if (idx === 0) return; // encabezados
-        if (filtro && fila[1].toLowerCase() !== filtro) return; // Columna B = Equipo
+        const serie = (fila[3] || "").trim().toLowerCase();
+        const km = (fila[4] || "").trim().toLowerCase();
+        const clave = serie + "-" + km;
 
-        const serie = (fila[3] || "").trim().toLowerCase();
-        const km    = (fila[4] || "").trim().toLowerCase();
-        const clave = serie + "-" + km;
+        let rowHtml = "";
+        fila.forEach((celda, colIdx) => {
+          let clase = "";
+          if (duplicados.has(clave) && duplicados.get(clave).length > 1) {
+            if (colIdx === 3 || colIdx === 4) {
+              clase = "duplicado";
+            }
+          }
+          rowHtml += `<td class="${clase}">${celda}</td>`;
+        });
+        
+        rowHtml += `<td><button class="eliminar" onclick="eliminarFila(${idx + 1})">Eliminar</button></td>`;
+        
+        tabla.innerHTML += `<tr>${rowHtml}</tr>`;
+      });
+    }
 
-        let rowHtml = "";
-        fila.forEach((celda, colIdx) => {
-          let clase = "";
-          if (duplicados.has(clave) && duplicados.get(clave).length > 1) {
-            if (colIdx === 3 || colIdx === 4) { // Solo Serie y KM
-              clase = "duplicado";
-            }
-          }
-          rowHtml += `<td class="${clase}">${celda}</td>`;
-        });
+    async function eliminarFila(rowNumber) {
+        if (!confirm(`¿Estás seguro de que deseas eliminar la fila ${rowNumber}?`)) {
+            return;
+        }
 
-        tabla.innerHTML += `<tr>${rowHtml}</tr>`;
-      });
-    }
+        const loader = document.getElementById('loader');
+        loader.style.display = 'block';
+        loader.innerText = "⏳ Eliminando registro...";
 
-    function descargarExcel() {
-      const sheetId = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI"; 
-      const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
-      window.open(url, "_blank");
-    }
+        const data = { row: rowNumber, action: 'delete' };
 
-    cargarDatos();
-  </script>
+        try {
+            const response = await fetch(webAppUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error en la red: ${response.status} ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+
+            if (result.status === "success") {
+                await cargarDatos();
+                alert("✅ Registro eliminado correctamente.");
+            } else {
+                throw new Error(result.message);
+            }
+
+        } catch (error) {
+            console.error("Error al eliminar:", error);
+            alert("❌ Ocurrió un error al intentar eliminar el registro: " + error.message);
+        } finally {
+            loader.style.display = 'none';
+        }
+    }
+
+    function descargarExcel() {
+      const sheetId = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI"; 
+      const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
+      window.open(url, "_blank");
+    }
+
+    cargarDatos();
+  </script>
 </body>
 </html>
 
