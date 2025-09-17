@@ -13,7 +13,8 @@
     input, select { padding: 6px; }
     button { padding: 6px 12px; cursor: pointer; }
     .duplicado { background-color: red; color: white; }
-    .btn-borrar { background: #d9534f; color: white; border: none; border-radius: 4px; }
+    .btn-borrar { background: #d9534f; color: white; border: none; border-radius: 4px; padding: 6px 10px; cursor: pointer; }
+    .btn-borrar[disabled] { opacity: 0.6; cursor: default; }
   </style>
 </head>
 <body>
@@ -35,13 +36,23 @@
   <table id="tablaDatos"></table>
 
   <script>
+    // === CONFIG: ajusta si tu WebApp o Sheet ID son distintos ===
+    const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxdbrnxexTVqGi_rlKVp95QAZmrTnTA1GKIricVTVnhAsK5hGj3v9kSlom-9wj1u3hc/exec";
+    const SHEET_ID = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI";
+    // ========================================================
+
     let registros = [];
 
     async function cargarDatos() {
       const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
-      const res = await fetch(url);
-      const text = await res.text();
-      registros = text.split("\n").map(row => row.split(","));
+      try {
+        const res = await fetch(url);
+        const text = await res.text();
+        registros = text.split("\n").map(row => row.split(","));
+      } catch (err) {
+        console.error("Error cargando CSV:", err);
+        registros = [];
+      }
       renderTable();
       document.getElementById("loader").style.display = "none";
     }
@@ -49,6 +60,11 @@
     function renderTable() {
       const tabla = document.getElementById("tablaDatos");
       tabla.innerHTML = "";
+
+      if (!registros || registros.length === 0) {
+        tabla.innerHTML = "<tr><td>No hay datos</td></tr>";
+        return;
+      }
 
       const filtro = document.getElementById("filtroEquipo").value.toLowerCase();
 
@@ -68,15 +84,16 @@
         }
       });
 
-      // Encabezados
-      const headers = [...registros[0], "Acciones"];
-      const ths = headers.map(c => `<th>${c}</th>`).join("");
+      // Encabezados (añadimos columna Acciones)
+      const headers = registros[0] ? [...registros[0]] : [];
+      headers.push("Acciones");
+      const ths = headers.map(c => `<th>${escapeHtml(c)}</th>`).join("");
       tabla.innerHTML += `<tr>${ths}</tr>`;
 
       // Filas
       registros.forEach((fila, idx) => {
         if (idx === 0) return;
-        if (filtro && fila[1].toLowerCase() !== filtro) return;
+        if (filtro && String(fila[1] || "").toLowerCase() !== filtro) return;
 
         const serie = (fila[3] || "").trim().toLowerCase();
         const km    = (fila[4] || "").trim().toLowerCase();
@@ -88,37 +105,65 @@
           if (duplicados.has(clave) && duplicados.get(clave).length > 1) {
             if (colIdx === 3 || colIdx === 4) clase = "duplicado";
           }
-          rowHtml += `<td class="${clase}">${celda}</td>`;
+          rowHtml += `<td class="${clase}">${escapeHtml(celda)}</td>`;
         });
 
-        // Botón eliminar (manda el índice de fila en la hoja, que empieza en 2 porque 1 es header)
+        // fila en la hoja: idx + 1 (porque idx=0→fila1 encabezado)
         const filaSheet = idx + 1;
-        rowHtml += `<td><button class="btn-borrar" onclick="borrarFila(${filaSheet})">🗑 Eliminar</button></td>`;
+        rowHtml += `<td><button class="btn-borrar" onclick="borrarFilaConfirm(${filaSheet}, this)">🗑 Eliminar</button></td>`;
 
         tabla.innerHTML += `<tr>${rowHtml}</tr>`;
       });
     }
 
-    async function borrarFila(fila) {
-      if (!confirm("⚠️ ¿Seguro que quieres eliminar esta fila?")) return;
+    // confirmación y llamada a borrar
+    async function borrarFilaConfirm(fila, btn) {
+      if (!confirm("⚠️ ¿Seguro que deseas eliminar esta fila? Esta acción no se puede deshacer.")) return;
 
-      const url = "https://script.google.com/macros/s/AKfycbxdbrnxexTVqGi_rlKVp95QAZmrTnTA1GKIricVTVnhAsK5hGj3v9kSlom-9wj1u3hc/exec";
-      await fetch(url, {
-        method: "POST",
-        body: JSON.stringify({ action: "delete", row: fila }),
-        headers: { "Content-Type": "application/json" }
-      });
+      // Desactivar el botón y dar feedback
+      btn.disabled = true;
+      const original = btn.innerText;
+      btn.innerText = "Eliminando...";
 
-      // Recargar página para reflejar cambios
-      location.reload();
+      try {
+        // Usamos POST con mode:'no-cors' para evitar problemas CORS (igual que en tu index)
+        await fetch(WEBAPP_URL, {
+          method: "POST",
+          mode: "no-cors",
+          body: JSON.stringify({ action: "delete", row: fila })
+          // NOTA: en mode:'no-cors' no puedes establecer headers personalizados
+        });
+
+        // Esperamos un poco para dar tiempo al servidor a procesar la petición
+        setTimeout(() => {
+          // recarga para reflejar cambio
+          location.reload();
+        }, 800);
+      } catch (err) {
+        console.error("Error al eliminar:", err);
+        alert("Ocurrió un error intentando eliminar. Revisa la consola.");
+        btn.disabled = false;
+        btn.innerText = original;
+      }
     }
 
     function descargarExcel() {
-      const sheetId = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI";
-      const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
+      const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=xlsx`;
       window.open(url, "_blank");
     }
 
+    // pequeño sanitizador para mostrar HTML seguro
+    function escapeHtml(unsafe) {
+      if (unsafe === undefined || unsafe === null) return "";
+      return String(unsafe)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // arrancar
     cargarDatos();
   </script>
 </body>
