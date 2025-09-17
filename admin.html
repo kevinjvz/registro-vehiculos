@@ -35,15 +35,13 @@
 
   <script>
     let registros = [];
-    const webAppUrl = 'https://script.google.com/macros/s/AKfycbxdbrnxexTVqGi_rlKVp95QAZmrTnTA1GKIricVTVnhAsK5hGj3v9kSlom-9wj1u3hc/exec'; // 👈 Asegúrate de que esta sea la URL de tu WebApp
+    const webAppUrl = 'https://script.google.com/macros/s/AKfycbxdbrnxexTVqGi_rlKVp95QAZmrTnTA1GKIricVTVnhAsK5hGj3v9kSlom-9wj1u3hc/exec'; // 👈 Asegúrate de que esta sea la URL de tu WebApp
 
     async function cargarDatos() {
-      // ⚡ CSV publicado de tu hoja
       const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
       const res = await fetch(url);
       const text = await res.text();
 
-      // Convertir CSV a array
       registros = text.split("\n").map(row => row.split(","));
       renderTable();
       document.getElementById("loader").style.display = "none";
@@ -55,13 +53,12 @@
 
       const filtro = document.getElementById("filtroEquipo").value.toLowerCase();
 
-      // Map para detectar duplicados (clave = Serie + KM)
       const duplicados = new Map();
 
       registros.forEach((fila, idx) => {
-        if (idx === 0 || fila.every(c => c.trim() === '')) return; // ignorar encabezados y filas vacías
-        const serie = (fila[3] || "").trim().toLowerCase(); // Columna D = Serie
-        const km    = (fila[4] || "").trim().toLowerCase(); // Columna E = KM
+        if (idx === 0 || fila.every(c => c.trim() === '')) return;
+        const serie = (fila[3] || "").trim().toLowerCase();
+        const km = (fila[4] || "").trim().toLowerCase();
         if (serie && km) {
           const clave = serie + "-" + km;
           if (duplicados.has(clave)) {
@@ -72,32 +69,29 @@
         }
       });
 
-      // Dibujar encabezados
       const headers = registros[0];
       const ths = headers.map(c => `<th>${c}</th>`).join("");
-      tabla.innerHTML += `<tr>${ths}<th>Acciones</th></tr>`; // 👈 Nueva columna
+      tabla.innerHTML += `<tr>${ths}<th>Acciones</th></tr>`;
 
-      // Dibujar filas
       registros.forEach((fila, idx) => {
-        if (idx === 0 || fila.every(c => c.trim() === '')) return; // encabezados y filas vacías
-        if (filtro && fila[1].toLowerCase() !== filtro) return; // Columna B = Equipo
+        if (idx === 0 || fila.every(c => c.trim() === '')) return;
+        if (filtro && fila[1].toLowerCase() !== filtro) return;
 
         const serie = (fila[3] || "").trim().toLowerCase();
-        const km    = (fila[4] || "").trim().toLowerCase();
+        const km = (fila[4] || "").trim().toLowerCase();
         const clave = serie + "-" + km;
 
         let rowHtml = "";
         fila.forEach((celda, colIdx) => {
           let clase = "";
           if (duplicados.has(clave) && duplicados.get(clave).length > 1) {
-            if (colIdx === 3 || colIdx === 4) { // Solo Serie y KM
+            if (colIdx === 3 || colIdx === 4) {
               clase = "duplicado";
             }
           }
           rowHtml += `<td class="${clase}">${celda}</td>`;
         });
         
-        // 👈 Botón de eliminar con la fila index + 1 (la primera fila del CSV es el encabezado)
         rowHtml += `<td><button onclick="eliminarFila(${idx + 1})">🗑️</button></td>`;
         
         tabla.innerHTML += `<tr>${rowHtml}</tr>`;
@@ -118,17 +112,26 @@
         try {
             const response = await fetch(webAppUrl, {
                 method: 'POST',
-                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
+
+            if (!response.ok) {
+                throw new Error(`Error en la red: ${response.status} ${response.statusText}`);
+            }
             
-            // Recargar datos para reflejar el cambio
-            await cargarDatos();
-            alert("✅ Registro eliminado correctamente.");
+            const result = await response.json();
+
+            if (result.status === "success") {
+                await cargarDatos();
+                alert("✅ Registro eliminado correctamente.");
+            } else {
+                throw new Error(result.message);
+            }
 
         } catch (error) {
             console.error("Error al eliminar:", error);
-            alert("❌ Ocurrió un error al intentar eliminar el registro.");
+            alert("❌ Ocurrió un error al intentar eliminar el registro: " + error.message);
         } finally {
             loader.style.display = 'none';
         }
