@@ -36,8 +36,8 @@
 
   <script>
     let registros = [];
-    // ⚠️ Importante: Asegúrate de que esta URL sea la de tu WebApp desplegada
-    const webAppUrl = 'https://script.google.com/macros/s/AKfycbxdbrnxexTVqGi_rlKVp95QAZmrTnTA1GKIricVTVnhAsK5hGj3v9kSlom-9wj1u3hc/exec'; 
+    // 👇 URL real de tu WebApp (la misma que usas en index.html)
+    const webAppUrl = 'https://script.google.com/macros/s/AKfycbwr8cCeBB5_sSkT-NpQ70A5i2DcKsvsMVNE86_lStsMSPDSHvSBEElWdU0Pb1ytTNnS/exec';
 
     async function cargarDatos() {
       const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
@@ -100,42 +100,38 @@
     }
 
     async function eliminarFila(rowNumber) {
-        if (!confirm(`¿Estás seguro de que deseas eliminar la fila ${rowNumber}?`)) {
-            return;
+      if (!confirm(`⚠️ ¿Estás seguro de que deseas eliminar la fila ${rowNumber}?`)) {
+        return;
+      }
+
+      const loader = document.getElementById('loader');
+      loader.style.display = 'block';
+      loader.innerText = "⏳ Eliminando registro...";
+
+      const data = { row: rowNumber, action: 'delete' };
+
+      try {
+        const response = await fetch(webAppUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (result.status === "success") {
+          alert("✅ Registro eliminado correctamente.");
+          location.reload(); // recarga la página para ver los cambios
+        } else {
+          throw new Error(result.message);
         }
 
-        const loader = document.getElementById('loader');
-        loader.style.display = 'block';
-        loader.innerText = "⏳ Eliminando registro...";
-
-        const data = { row: rowNumber, action: 'delete' };
-
-        try {
-            const response = await fetch(webAppUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-
-            if (!response.ok) {
-                throw new Error(`Error en la red: ${response.status} ${response.statusText}`);
-            }
-            
-            const result = await response.json();
-
-            if (result.status === "success") {
-                await cargarDatos();
-                alert("✅ Registro eliminado correctamente.");
-            } else {
-                throw new Error(result.message);
-            }
-
-        } catch (error) {
-            console.error("Error al eliminar:", error);
-            alert("❌ Ocurrió un error al intentar eliminar el registro: " + error.message);
-        } finally {
-            loader.style.display = 'none';
-        }
+      } catch (error) {
+        console.error("Error al eliminar:", error);
+        alert("❌ Ocurrió un error al intentar eliminar el registro: " + error.message);
+      } finally {
+        loader.style.display = 'none';
+      }
     }
 
     function descargarExcel() {
@@ -148,6 +144,8 @@
   </script>
 </body>
 </html>
+
+
 
 
 
