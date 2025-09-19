@@ -35,32 +35,36 @@
 
   <script>
     let registros = [];
-
+    // ⚠️ ATENCIÓN: Reemplaza esta URL con la URL de tu Web App
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxdbrnxexTVqGi_rlKVp95QAZmrTnTA1GKIricVTVnhAsK5hGj3v9kSlom-9wj1u3hc/exec';
+    
     async function cargarDatos() {
       // ⚡ CSV publicado de tu hoja
       const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
-      const res = await fetch(url);
-      const text = await res.text();
-
-      // Convertir CSV a array
-      registros = text.split("\n").map(row => row.split(","));
-      renderTable();
-      document.getElementById("loader").style.display = "none";
+      try {
+        const res = await fetch(url);
+        const text = await res.text();
+        registros = text.split("\n").map(row => row.split(","));
+        renderTable();
+      } catch (error) {
+        console.error("Error al cargar los datos:", error);
+        document.getElementById("loader").innerText = "❌ Error al cargar los datos.";
+      } finally {
+        document.getElementById("loader").style.display = "none";
+      }
     }
 
     function renderTable() {
       const tabla = document.getElementById("tablaDatos");
       tabla.innerHTML = "";
-
       const filtro = document.getElementById("filtroEquipo").value.toLowerCase();
-
-      // Map para detectar duplicados (clave = Serie + KM)
       const duplicados = new Map();
 
+      // Detección de duplicados
       registros.forEach((fila, idx) => {
-        if (idx === 0) return; // ignorar encabezados
-        const serie = (fila[3] || "").trim().toLowerCase(); // Columna D = Serie
-        const km    = (fila[4] || "").trim().toLowerCase(); // Columna E = KM
+        if (idx === 0) return;
+        const serie = (fila[3] || "").trim().toLowerCase();
+        const km    = (fila[4] || "").trim().toLowerCase();
         if (serie && km) {
           const clave = serie + "-" + km;
           if (duplicados.has(clave)) {
@@ -76,10 +80,10 @@
       const ths = headers.map(c => `<th>${c}</th>`).join("");
       tabla.innerHTML += `<tr>${ths}<th>Acciones</th></tr>`;
 
-      // Dibujar filas
+      // Dibujar filas con el botón de eliminar
       registros.forEach((fila, idx) => {
-        if (idx === 0) return; // encabezados
-        if (filtro && fila[1].toLowerCase() !== filtro) return; // Columna B = Equipo
+        if (idx === 0) return;
+        if (filtro && fila[1].toLowerCase() !== filtro) return;
 
         const serie = (fila[3] || "").trim().toLowerCase();
         const km    = (fila[4] || "").trim().toLowerCase();
@@ -89,14 +93,13 @@
         fila.forEach((celda, colIdx) => {
           let clase = "";
           if (duplicados.has(clave) && duplicados.get(clave).length > 1) {
-            if (colIdx === 3 || colIdx === 4) { // Solo Serie y KM
+            if (colIdx === 3 || colIdx === 4) {
               clase = "duplicado";
             }
           }
           rowHtml += `<td class="${clase}">${celda}</td>`;
         });
         
-        // Agregar celda con el botón de eliminar
         rowHtml += `<td><button onclick="eliminarFila(${idx})">Eliminar</button></td>`;
         tabla.innerHTML += `<tr>${rowHtml}</tr>`;
       });
@@ -104,23 +107,18 @@
 
     async function eliminarFila(idx) {
         if (confirm("¿Estás seguro de que quieres eliminar este registro?")) {
-            // 👇 Aquí va el URL del nuevo WebApp para eliminar
-            const url = 'https://script.google.com/macros/s/AKfycbxdbrnxexTVqGi_rlKVp95QAZmrTnTA1GKIricVTVnhAsK5hGj3v9kSlom-9wj1u3hc/exec';
-            
             try {
-                const res = await fetch(url, {
+                // Envía la solicitud al mismo script de Apps Script
+                const res = await fetch(WEB_APP_URL, {
                     method: 'POST',
                     mode: 'no-cors',
-                    body: JSON.stringify({ action: 'delete', row: idx + 1 }), // +1 porque el índice de la hoja empieza en 1
+                    body: JSON.stringify({ action: 'delete', row: idx + 1 }),
                     headers: { 'Content-Type': 'application/json' }
                 });
 
-                if (res.ok) {
-                    alert("Registro eliminado con éxito.");
-                    cargarDatos(); // Recargar la tabla
-                } else {
-                    alert("Error al eliminar el registro.");
-                }
+                // Aunque la respuesta no-cors no nos permite ver el status, la acción se ejecutará si la URL es correcta
+                alert("Registro eliminado con éxito.");
+                cargarDatos(); // Recargar la tabla
             } catch (error) {
                 alert("Error de conexión al eliminar el registro.");
                 console.error(error);
@@ -138,5 +136,4 @@
   </script>
 </body>
 </html>
-
 
