@@ -48,8 +48,7 @@
 
     <script>
         let registros = [];
-        // ⚠️ Usa aquí la URL de tu Web App (la de /exec)
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwr8cCeBB5_sSkT-NpQ70A5i2DcKsvsMVNE86_lStsMSPDSHvSBEElWdU0Pb1ytTNnS/exec';
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwr8cCeBB5_sSkT-NpQ70A5i2DcKsvsMVNE86_lStsMSPDSHvSBEElWdU0Pb1ytTNnS/exec";
 
         async function cargarDatos() {
             const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
@@ -115,22 +114,20 @@
         }
 
         async function eliminarFila(idx) {
-            if (confirm("¿Estás seguro de que quieres eliminar este registro?")) {
+            if (confirm("⚠️ ¿Estás seguro de que quieres eliminar este registro?")) {
                 try {
                     const res = await fetch(WEB_APP_URL, {
-                        method: 'POST',
-                        mode: 'cors',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'delete', row: idx + 1 })
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ action: "delete", row: idx + 1 })
                     });
 
-                    const result = await res.json();
-
-                    if (result.status === "success") {
-                        alert("✅ Registro eliminado con éxito. Recargando...");
-                        location.reload(); // 👈 recarga para reflejar los cambios
+                    const text = await res.text();
+                    if (res.ok && text.includes("OK")) {
+                        alert("✅ Registro eliminado con éxito.");
+                        location.reload(); // 👈 recarga la página automáticamente
                     } else {
-                        alert("❌ Error: " + result.message);
+                        alert("❌ Error al eliminar el registro: " + text);
                     }
                 } catch (error) {
                     alert("❌ Error de conexión al intentar eliminar el registro.");
