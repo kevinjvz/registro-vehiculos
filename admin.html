@@ -48,7 +48,8 @@
 
     <script>
         let registros = [];
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxdbrnxexTVqGi_rlKVp95QAZmrTnTA1GKIricVTVnhAsK5hGj3v9kSlom-9wj1u3hc/exec';
+        // ⚠️ Usa aquí la URL de tu Web App (la de /exec)
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwr8cCeBB5_sSkT-NpQ70A5i2DcKsvsMVNE86_lStsMSPDSHvSBEElWdU0Pb1ytTNnS/exec';
 
         async function cargarDatos() {
             const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
@@ -119,16 +120,17 @@
                     const res = await fetch(WEB_APP_URL, {
                         method: 'POST',
                         mode: 'cors',
-                        body: JSON.stringify({ action: 'delete', row: idx + 1 }),
-                        headers: { 'Content-Type': 'application/json' }
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'delete', row: idx + 1 })
                     });
 
-                    if (res.ok) {
-                        alert("✅ Registro eliminado con éxito. Recargando tabla...");
-                        await cargarDatos();
+                    const result = await res.json();
+
+                    if (result.status === "success") {
+                        alert("✅ Registro eliminado con éxito. Recargando...");
+                        location.reload(); // 👈 recarga para reflejar los cambios
                     } else {
-                        const errorText = await res.text();
-                        alert(`❌ Error al eliminar el registro: ${errorText}`);
+                        alert("❌ Error: " + result.message);
                     }
                 } catch (error) {
                     alert("❌ Error de conexión al intentar eliminar el registro.");
@@ -147,6 +149,8 @@
     </script>
 </body>
 </html>
+
+
 
 
 
