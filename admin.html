@@ -35,11 +35,10 @@
 
   <script>
     let registros = [];
-    // ⚠️ ATENCIÓN: Reemplaza esta URL con la URL de tu Web App
+    // ⚠️ Reemplaza esta URL con la URL de tu Web App
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxdbrnxexTVqGi_rlKVp95QAZmrTnTA1GKIricVTVnhAsK5hGj3v9kSlom-9wj1u3hc/exec';
     
     async function cargarDatos() {
-      // ⚡ CSV publicado de tu hoja
       const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
       try {
         const res = await fetch(url);
@@ -60,7 +59,6 @@
       const filtro = document.getElementById("filtroEquipo").value.toLowerCase();
       const duplicados = new Map();
 
-      // Detección de duplicados
       registros.forEach((fila, idx) => {
         if (idx === 0) return;
         const serie = (fila[3] || "").trim().toLowerCase();
@@ -75,12 +73,10 @@
         }
       });
 
-      // Dibujar encabezados
       const headers = registros[0];
       const ths = headers.map(c => `<th>${c}</th>`).join("");
       tabla.innerHTML += `<tr>${ths}<th>Acciones</th></tr>`;
 
-      // Dibujar filas con el botón de eliminar
       registros.forEach((fila, idx) => {
         if (idx === 0) return;
         if (filtro && fila[1].toLowerCase() !== filtro) return;
@@ -108,19 +104,24 @@
     async function eliminarFila(idx) {
         if (confirm("¿Estás seguro de que quieres eliminar este registro?")) {
             try {
-                // Envía la solicitud al mismo script de Apps Script
                 const res = await fetch(WEB_APP_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
+                    // 👇 Cambia el modo para permitir leer la respuesta del servidor
+                    mode: 'cors',
                     body: JSON.stringify({ action: 'delete', row: idx + 1 }),
                     headers: { 'Content-Type': 'application/json' }
                 });
 
-                // Aunque la respuesta no-cors no nos permite ver el status, la acción se ejecutará si la URL es correcta
-                alert("Registro eliminado con éxito.");
-                cargarDatos(); // Recargar la tabla
+                // Ahora sí podemos verificar si la respuesta fue exitosa
+                if (res.ok) {
+                    alert("✅ Registro eliminado con éxito. Recargando tabla...");
+                    await cargarDatos();
+                } else {
+                    const errorText = await res.text();
+                    alert(`❌ Error al eliminar el registro: ${errorText}`);
+                }
             } catch (error) {
-                alert("Error de conexión al eliminar el registro.");
+                alert("❌ Error de conexión al intentar eliminar el registro.");
                 console.error(error);
             }
         }
