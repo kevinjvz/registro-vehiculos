@@ -74,7 +74,7 @@
       // Dibujar encabezados
       const headers = registros[0];
       const ths = headers.map(c => `<th>${c}</th>`).join("");
-      tabla.innerHTML += `<tr>${ths}</tr>`;
+      tabla.innerHTML += `<tr>${ths}<th>Acciones</th></tr>`;
 
       // Dibujar filas
       registros.forEach((fila, idx) => {
@@ -95,13 +95,41 @@
           }
           rowHtml += `<td class="${clase}">${celda}</td>`;
         });
-
+        
+        // Agregar celda con el botón de eliminar
+        rowHtml += `<td><button onclick="eliminarFila(${idx})">Eliminar</button></td>`;
         tabla.innerHTML += `<tr>${rowHtml}</tr>`;
       });
     }
 
+    async function eliminarFila(idx) {
+        if (confirm("¿Estás seguro de que quieres eliminar este registro?")) {
+            // 👇 Aquí va el URL del nuevo WebApp para eliminar
+            const url = 'https://script.google.com/macros/s/AKfycbxdbrnxexTVqGi_rlKVp95QAZmrTnTA1GKIricVTVnhAsK5hGj3v9kSlom-9wj1u3hc/exec';
+            
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify({ action: 'delete', row: idx + 1 }), // +1 porque el índice de la hoja empieza en 1
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (res.ok) {
+                    alert("Registro eliminado con éxito.");
+                    cargarDatos(); // Recargar la tabla
+                } else {
+                    alert("Error al eliminar el registro.");
+                }
+            } catch (error) {
+                alert("Error de conexión al eliminar el registro.");
+                console.error(error);
+            }
+        }
+    }
+
     function descargarExcel() {
-      const sheetId = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI"; 
+      const sheetId = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI";  
       const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
       window.open(url, "_blank");
     }
