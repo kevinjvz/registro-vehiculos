@@ -73,7 +73,8 @@
       });
 
       const headers = registros[0];
-      const ths = headers.map(c => `<th>${c}</th>`).join("");
+      // 👇 El nuevo encabezado para la tabla, sin el timestamp y con el botón de Acciones
+      const ths = headers.slice(0, -1).map(c => `<th>${c}</th>`).join("");
       tabla.innerHTML += `<tr>${ths}<th>Acciones</th></tr>`;
 
       registros.forEach((fila, idx) => {
@@ -85,7 +86,8 @@
         const clave = serie + "-" + km;
 
         let rowHtml = "";
-        fila.forEach((celda, colIdx) => {
+        // 👇 Solo muestra las columnas que necesitas (sin el timestamp)
+        fila.slice(0, -1).forEach((celda, colIdx) => {
           let clase = "";
           if (duplicados.has(clave) && duplicados.get(clave).length > 1) {
             if (colIdx === 3 || colIdx === 4) {
@@ -134,5 +136,6 @@
   </script>
 </body>
 </html>
+
 
 
