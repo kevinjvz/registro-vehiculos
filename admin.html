@@ -1,172 +1,173 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Panel de Administración</title>
-    <style>
-        /* Nuevo estilo general */
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif; margin: 0; background-color: #e9ecef; color: #333; line-height: 1.6; }
-        .container { max-width: 1100px; margin: 50px auto; padding: 30px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #212529; font-size: 2.2rem; margin-bottom: 5px; }
-        p { text-align: center; color: #6c757d; margin-top: 0; }
-        #loader { text-align: center; font-size: 1rem; color: #007bff; margin-bottom: 25px; }
-        
-        /* Barra de herramientas */
-        .toolbar { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #dee2e6; margin-bottom: 25px; flex-wrap: wrap; gap: 10px; }
-        .toolbar label { font-weight: 600; color: #495057; }
-        .toolbar select, .toolbar button { padding: 10px 18px; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.9rem; cursor: pointer; transition: all 0.2s ease-in-out; }
-        .toolbar select { background-color: #f8f9fa; }
-        .toolbar button { background-color: #007bff; color: white; border: none; }
-        .toolbar button:hover { background-color: #0056b3; transform: translateY(-2px); box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    <meta charset="UTF-8">
+    <title>Panel de Administración</title>
+    <style>
+        /* Nuevo estilo general */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif; margin: 0; background-color: #e9ecef; color: #333; line-height: 1.6; }
+        .container { max-width: 1100px; margin: 50px auto; padding: 30px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #212529; font-size: 2.2rem; margin-bottom: 5px; }
+        p { text-align: center; color: #6c757d; margin-top: 0; }
+        #loader { text-align: center; font-size: 1rem; color: #007bff; margin-bottom: 25px; }
+        
+        /* Barra de herramientas */
+        .toolbar { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #dee2e6; margin-bottom: 25px; flex-wrap: wrap; gap: 10px; }
+        .toolbar label { font-weight: 600; color: #495057; }
+        .toolbar select, .toolbar button { padding: 10px 18px; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.9rem; cursor: pointer; transition: all 0.2s ease-in-out; }
+        .toolbar select { background-color: #f8f9fa; }
+        .toolbar button { background-color: #007bff; color: white; border: none; }
+        .toolbar button:hover { background-color: #0056b3; transform: translateY(-2px); box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
 
-        /* Estilo de la tabla */
-        table { width: 100%; border-collapse: collapse; margin-top: 25px; font-size: 0.9rem; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #dee2e6; }
-        th { background-color: #f8f9fa; color: #495057; font-weight: bold; text-transform: uppercase; }
-        tr:hover { background-color: #f1f3f5; }
+        /* Estilo de la tabla */
+        table { width: 100%; border-collapse: collapse; margin-top: 25px; font-size: 0.9rem; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #dee2e6; }
+        th { background-color: #f8f9fa; color: #495057; font-weight: bold; text-transform: uppercase; }
+        tr:hover { background-color: #f1f3f5; }
 
-        /* Estilo para duplicados en la fila completa */
-        .duplicado { background-color: #dc3545 !important; color: white; font-weight: bold; }
-        .duplicado:hover { background-color: #c82333 !important; }
+        /* Estilo para duplicados en la fila completa */
+        .duplicado { background-color: #dc3545 !important; color: white; font-weight: bold; }
+        .duplicado:hover { background-color: #c82333 !important; }
 
-        /* Estilo del botón de eliminar */
-        td button { background-color: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; transition: background-color 0.2s; }
-        td button:hover { background-color: #c82333; }
-    </style>
+        /* Estilo del botón de eliminar */
+        td button { background-color: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; transition: background-color 0.2s; }
+        td button:hover { background-color: #c82333; }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Panel de Administración</h2>
-        <p>Visualiza y filtra los registros directamente:</p>
+    <div class="container">
+        <h2>Panel de Administración</h2>
+        <p>Visualiza y filtra los registros directamente:</p>
 
+        <div id="loader">⏳ Cargando registros...</div>
 
-        <div id="loader">⏳ Cargando registros...</div>
+        <div class="toolbar">
+            <label>Filtro por Equipo:</label>
+            <select id="filtroEquipo" onchange="renderTable()">
+                <option value="">Todos</option>
+                <option value="Vehículo">Vehículo</option>
+                <option value="Maquinaria">Maquinaria</option>
+            </select>
+            <button onclick="descargarExcel()">📥 Exportar a Excel</button>
+        </div>
 
-        <div class="toolbar">
-            <label>Filtro por Equipo:</label>
-            <select id="filtroEquipo" onchange="renderTable()">
-                <option value="">Todos</option>
-                <option value="Vehículo">Vehículo</option>
-                <option value="Maquinaria">Maquinaria</option>
-            </select>
-            <button onclick="descargarExcel()">📥 Exportar a Excel</button>
-        </div>
+        <table id="tablaDatos">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Equipo</th>
+                    <th>Frente</th>
+                    <th>Número de Serie</th>
+                    <th>KM</th>
+                    <th>HRS</th>
+                    <th>Trabajador</th>
+                    <th>Estado</th>
+                    <th>Timestamp</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
 
-        <table id="tablaDatos">
-            <thead>
-                <tr>
-                    <th>Fecha</th>
-                    <th>Equipo</th>
-                    <th>Frente</th>
-                    <th>Número de Serie</th>
-                    <th>KM</th>
-                    <th>HRS</th>
-                    <th>Trabajador</th>
-                    <th>Estado</th>
-                    <th>Timestamp</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
+    <script>
+        let registros = [];
 
-    <script>
-        let registros = [];
+        async function cargarDatos() {
+            const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
+            try {
+                const res = await fetch(url);
+                const text = await res.text();
+                registros = text.split("\n").map(row => row.split(","));
+                renderTable();
+            } catch (error) {
+                console.error("Error al cargar los datos:", error);
+                document.getElementById("loader").innerText = "❌ Error al cargar los datos.";
+            } finally {
+                document.getElementById("loader").style.display = "none";
+            }
+        }
 
-        async function cargarDatos() {
-            const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
-            try {
-                const res = await fetch(url);
-                const text = await res.text();
-                registros = text.split("\n").map(row => row.split(","));
-                renderTable();
-            } catch (error) {
-                console.error("Error al cargar los datos:", error);
-                document.getElementById("loader").innerText = "❌ Error al cargar los datos.";
-            } finally {
-                document.getElementById("loader").style.display = "none";
-            }
-        }
+        function renderTable() {
+            const tablaBody = document.querySelector("#tablaDatos tbody");
+            tablaBody.innerHTML = "";
 
-        function renderTable() {
-            const tablaBody = document.querySelector("#tablaDatos tbody");
-            tablaBody.innerHTML = "";
+            const filtro = document.getElementById("filtroEquipo").value.toLowerCase();
+            const duplicados = new Map();
+            const headers = registros[0] || [];
 
-            const filtro = document.getElementById("filtroEquipo").value.toLowerCase();
-            const duplicados = new Map();
-            const headers = registros[0] || [];
+            registros.forEach((fila, idx) => {
+                if (idx === 0) return;
+                const serie = (fila[3] || "").trim().toLowerCase();
+                const km = (fila[4] || "").trim().toLowerCase();
+                if (serie && km) {
+                    const clave = serie + "-" + km;
+                    if (duplicados.has(clave)) {
+                        duplicados.set(clave, [...duplicados.get(clave), idx]);
+                    } else {
+                        duplicados.set(clave, [idx]);
+                    }
+                }
+            });
+            
+            registros.forEach((fila, idx) => {
+                if (idx === 0) return;
+                if (filtro && (fila[1] || "").toLowerCase() !== filtro) return;
 
-            registros.forEach((fila, idx) => {
-                if (idx === 0) return;
-                const serie = (fila[3] || "").trim().toLowerCase();
-                const km = (fila[4] || "").trim().toLowerCase();
-                if (serie && km) {
-                    const clave = serie + "-" + km;
-                    if (duplicados.has(clave)) {
-                        duplicados.set(clave, [...duplicados.get(clave), idx]);
-                    } else {
-                        duplicados.set(clave, [idx]);
-                    }
-                }
-            });
-            
-            registros.forEach((fila, idx) => {
-                if (idx === 0) return;
-                if (filtro && (fila[1] || "").toLowerCase() !== filtro) return;
+                const serie = (fila[3] || "").trim().toLowerCase();
+                const km = (fila[4] || "").trim().toLowerCase();
+                const clave = serie + "-" + km;
 
-                const serie = (fila[3] || "").trim().toLowerCase();
-                const km = (fila[4] || "").trim().toLowerCase();
-                const clave = serie + "-" + km;
+                // Condición para aplicar la clase a la fila completa
+                const isDuplicate = duplicados.has(clave) && duplicados.get(clave).length > 1;
+                const rowClass = isDuplicate ? 'class="duplicado"' : '';
 
-                // NUEVO CÓDIGO: Condición para aplicar la clase a la fila completa
-                const isDuplicate = duplicados.has(clave) && duplicados.get(clave).length > 1;
-                const rowClass = isDuplicate ? 'class="duplicado"' : '';
+                let rowHtml = "";
+                fila.forEach((celda) => {
+                    rowHtml += `<td>${celda}</td>`;
+                });
+                
+                rowHtml += `<td><button onclick="eliminarRegistro(${idx + 1})">❌ Eliminar</button></td>`;
+                tablaBody.innerHTML += `<tr ${rowClass}>${rowHtml}</tr>`;
+            });
+        }
 
-                let rowHtml = "";
-                fila.forEach((celda) => {
-                    rowHtml += `<td>${celda}</td>`;
-                });
-                
-                rowHtml += `<td><button onclick="eliminarRegistro(${idx + 1})">❌ Eliminar</button></td>`;
-                tablaBody.innerHTML += `<tr ${rowClass}>${rowHtml}</tr>`;
-            });
-        }
+        function descargarExcel() {
+            const sheetId = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI";
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
+            window.open(url, "_blank");
+        }
 
-        function descargarExcel() {
-            const sheetId = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI";
-            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
-            window.open(url, "_blank");
-        }
+        async function eliminarRegistro(filaAeliminar) {
+            if (!confirm('¿Estás seguro de que quieres eliminar este registro? Esta acción es irreversible.')) {
+                return;
+            }
+        
+            const modal = document.getElementById('loader');
+            modal.style.display = 'block';
+            modal.innerText = '⏳ Eliminando registro...';
+        
+            try {
+                // CAMBIO AQUÍ: Ahora la acción y la fila van en la URL
+                const url = 'https://script.google.com/macros/s/AKfycbxdbrnxexTVqGi_rlKVp95QAZmrTnTA1GKIricVTVnhAsK5hGj3v9kSlom-9wj1u3hc/exec?action=delete&row=' + filaAeliminar; // ⚠️ Reemplaza con tu URL
+                
+                await fetch(url, {
+                    method: 'POST',
+                    mode: 'no-cors'
+                });
+            
+                alert('✅ Registro eliminado correctamente.');
+                await cargarDatos();
+            } catch (error) {
+                console.error('Error al eliminar el registro:', error);
+                alert('❌ Error al eliminar el registro: ' + error.message);
+            } finally {
+                modal.style.display = 'none';
+            }
+        }
 
-        async function eliminarRegistro(filaAeliminar) {
-            if (!confirm('¿Estás seguro de que quieres eliminar este registro? Esta acción es irreversible.')) {
-                return;
-            }
-        
-            const modal = document.getElementById('loader');
-            modal.style.display = 'block';
-            modal.innerText = '⏳ Eliminando registro...';
-        
-            try {
-                const url = 'https://script.google.com/macros/s/AKfycbxdbrnxexTVqGi_rlKVp95QAZmrTnTA1GKIricVTVnhAsK5hGj3v9kSlom-9wj1u3hc/exec';
-                await fetch(url, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify({ action: 'delete', row: filaAeliminar })
-                });
-            
-                alert('✅ Registro eliminado correctamente.');
-                await cargarDatos();
-            } catch (error) {
-                console.error('Error al eliminar el registro:', error);
-                alert('❌ Error al eliminar el registro: ' + error.message);
-            } finally {
-                modal.style.display = 'none';
-            }
-        }
-        cargarDatos();
-    </script>
+        cargarDatos();
+    </script>
 </body>
 </html>
 
