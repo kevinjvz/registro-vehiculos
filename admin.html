@@ -39,7 +39,23 @@
             <button onclick="descargarExcel()">📥 Exportar a Excel</button>
         </div>
 
-        <table id="tablaDatos"></table>
+        <table id="tablaDatos">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Equipo</th>
+                    <th>Frente</th>
+                    <th>Número de Serie</th>
+                    <th>KM</th>
+                    <th>HRS</th>
+                    <th>Trabajador</th>
+                    <th>Estado</th>
+                    <th>Timestamp</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
     </div>
 
     <script>
@@ -61,10 +77,12 @@
         }
 
         function renderTable() {
-            const tabla = document.getElementById("tablaDatos");
-            tabla.innerHTML = "";
+            const tablaBody = document.querySelector("#tablaDatos tbody");
+            tablaBody.innerHTML = "";
+
             const filtro = document.getElementById("filtroEquipo").value.toLowerCase();
             const duplicados = new Map();
+            const headers = registros[0] || [];
 
             registros.forEach((fila, idx) => {
                 if (idx === 0) return;
@@ -79,14 +97,10 @@
                     }
                 }
             });
-
-            const headers = registros[0];
-            const ths = headers.map(c => `<th>${c}</th>`).join("") + "<th>Acciones</th>";
-            tabla.innerHTML += `<tr>${ths}</tr>`;
-
+            
             registros.forEach((fila, idx) => {
                 if (idx === 0) return;
-                if (filtro && fila[1].toLowerCase() !== filtro) return;
+                if (filtro && (fila[1] || "").toLowerCase() !== filtro) return;
 
                 const serie = (fila[3] || "").trim().toLowerCase();
                 const km = (fila[4] || "").trim().toLowerCase();
@@ -102,8 +116,9 @@
                     }
                     rowHtml += `<td class="${clase}">${celda}</td>`;
                 });
+                
                 rowHtml += `<td><button onclick="eliminarRegistro(${idx + 1})">❌ Eliminar</button></td>`;
-                tabla.innerHTML += `<tr>${rowHtml}</tr>`;
+                tablaBody.innerHTML += `<tr>${rowHtml}</tr>`;
             });
         }
 
@@ -131,7 +146,7 @@
                 });
             
                 alert('✅ Registro eliminado correctamente.');
-                await cargarDatos(); // Vuelve a cargar los datos para actualizar la tabla
+                await cargarDatos();
             } catch (error) {
                 console.error('Error al eliminar el registro:', error);
                 alert('❌ Error al eliminar el registro: ' + error.message);
@@ -144,7 +159,6 @@
     </script>
 </body>
 </html>
-
 
 
 
