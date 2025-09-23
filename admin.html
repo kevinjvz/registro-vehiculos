@@ -1,163 +1,177 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Registro de Equipo</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    header {
-      display: flex; align-items: center; justify-content: center;
-      flex-wrap: wrap; background-color: #f5f5f5; padding: 10px 20px;
-      margin-bottom: 20px; border-radius: 6px;
-    }
-    .logo { max-width: 150px; height: auto; margin-right: 15px; }
-    h2 { margin: 0; text-align: center; }
-    label { display: block; margin-top: 10px; }
-    input, select {
-      width: 100%; max-width: 400px; padding: 8px; margin-top: 5px; box-sizing: border-box;
-    }
-    button {
-      margin-top: 20px; padding: 10px 20px; font-size: 16px;
-      cursor: pointer; width: 100%; max-width: 200px;
-    }
-    #mensaje { margin-top: 20px; font-weight: bold; }
-    #modalCargando {
-      display: none; position: fixed; z-index: 999; left: 0; top: 0;
-      width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);
-    }
-    #modalContenido {
-      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      background: white; padding: 30px; border-radius: 8px; text-align: center;
-      font-size: 18px; box-shadow: 0 0 10px rgba(0,0,0,0.3);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Panel de Administración</title>
+    <style>
+        /* Usando el diseño limpio que te gustó */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif; margin: 0; background-color: #e9ecef; color: #333; line-height: 1.6; }
+        .container { max-width: 1100px; margin: 50px auto; padding: 30px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #212529; font-size: 2.2rem; margin-bottom: 5px; }
+        p { text-align: center; color: #6c757d; margin-top: 0; }
+        #loader { text-align: center; font-size: 1rem; color: #007bff; margin-bottom: 25px; }
+        
+        /* Barra de herramientas */
+        .toolbar { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #dee2e6; margin-bottom: 25px; flex-wrap: wrap; gap: 10px; }
+        .toolbar label { font-weight: 600; color: #495057; }
+        .toolbar select, .toolbar button { padding: 10px 18px; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.9rem; cursor: pointer; transition: all 0.2s ease-in-out; }
+        .toolbar select { background-color: #f8f9fa; }
+        .toolbar button { background-color: #007bff; color: white; border: none; }
+        .toolbar button:hover { background-color: #0056b3; transform: translateY(-2px); box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+
+        /* Estilo de la tabla */
+        table { width: 100%; border-collapse: collapse; margin-top: 25px; font-size: 0.9rem; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #dee2e6; }
+        th { background-color: #f8f9fa; color: #495057; font-weight: bold; text-transform: uppercase; }
+        tr:hover { background-color: #f1f3f5; }
+
+        /* Estilo para duplicados en la fila completa */
+        .duplicado { background-color: #dc3545 !important; color: white; font-weight: bold; }
+        .duplicado:hover { background-color: #c82333 !important; }
+
+        /* Estilo del botón de eliminar */
+        td button { background-color: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; transition: background-color 0.2s; }
+        td button:hover { background-color: #c82333; }
+    </style>
 </head>
 <body>
-  <header>
-    <img src="logolief.jpg" alt="Logo LIEF" class="logo">
-    <h2>Formulario de Registro</h2>
-  </header>
+    <div class="container">
+        <h2>Panel de Administración</h2>
+        <p>Visualiza y filtra los registros directamente:</p>
 
-  <label for="fecha">Fecha:</label>
-  <input type="date" id="fecha" required>
+        <div id="loader">⏳ Cargando registros...</div>
 
-  <label for="equipo">Equipo:</label>
-  <select id="equipo" onchange="actualizarCampoMedida()" required>
-    <option value="">-- Selecciona --</option>
-    <option value="Vehículo">Vehículo</option>
-    <option value="Maquinaria">Maquinaria</option>
-  </select>
+        <div class="toolbar">
+            <label>Filtro por Equipo:</label>
+            <select id="filtroEquipo" onchange="renderTable()">
+                <option value="">Todos</option>
+                <option value="Vehículo">Vehículo</option>
+                <option value="Maquinaria">Maquinaria</option>
+            </select>
+            <button onclick="descargarExcel()">📥 Exportar a Excel</button>
+        </div>
 
-  <label for="frente">Frente:</label>
-  <input type="text" id="frente" required >
+        <table id="tablaDatos">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Equipo</th>
+                    <th>Frente</th>
+                    <th>Número de Serie</th>
+                    <th>KM</th>
+                    <th>HRS</th>
+                    <th>Trabajador</th>
+                    <th>Estado</th>
+                    <th>Timestamp</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
 
-  <label for="serie">Número de Serie:</label>
-  <input type="text" id="serie" required>
+    <script>
+        let registros = [];
 
-  <div id="campoMedidaContainer"></div>
+        async function cargarDatos() {
+            // 👇 URL CSV DE TU HOJA PUBLICADA
+            const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
+            try {
+                const res = await fetch(url);
+                const text = await res.text();
+                registros = text.split("\n").map(row => row.split(","));
+                renderTable();
+            } catch (error) {
+                console.error("Error al cargar los datos:", error);
+                document.getElementById("loader").innerText = "❌ Error al cargar los datos.";
+            } finally {
+                document.getElementById("loader").style.display = "none";
+            }
+        }
 
-  <label for="trabajador">Trabajador:</label>
-  <input type="text" id="trabajador" required>
+        function renderTable() {
+            const tablaBody = document.querySelector("#tablaDatos tbody");
+            tablaBody.innerHTML = "";
 
-  <label for="estado">Estado del equipo:</label>
-  <select id="estado" required>
-    <option value="">-- Selecciona --</option>
-    <option value="Operativo">Operativo</option>
-    <option value="No Operativo">No Operativo</option>
-  </select>
+            const filtro = document.getElementById("filtroEquipo").value.toLowerCase();
+            const duplicados = new Map();
+            const headers = registros[0] || [];
 
-  <button onclick="enviarDatos()">Enviar</button>
-  <div id="mensaje"></div>
+            registros.forEach((fila, idx) => {
+                if (idx === 0) return;
+                const serie = (fila[3] || "").trim().toLowerCase();
+                const km = (fila[4] || "").trim().toLowerCase();
+                if (serie && km) {
+                    const clave = serie + "-" + km;
+                    if (duplicados.has(clave)) {
+                        duplicados.set(clave, [...duplicados.get(clave), idx]);
+                    } else {
+                        duplicados.set(clave, [idx]);
+                    }
+                }
+            });
+            
+            registros.forEach((fila, idx) => {
+                if (idx === 0) return;
+                if (filtro && (fila[1] || "").toLowerCase() !== filtro) return;
 
-  <div id="modalCargando">
-    <div id="modalContenido">⏳ Enviando datos, por favor espera...</div>
-  </div>
+                const serie = (fila[3] || "").trim().toLowerCase();
+                const km = (fila[4] || "").trim().toLowerCase();
+                const clave = serie + "-" + km;
 
-  <script>
-    function actualizarCampoMedida() {
-      const equipo = document.getElementById('equipo').value;
-      const container = document.getElementById('campoMedidaContainer');
-      container.innerHTML = '';
+                // Condición para aplicar la clase a la fila completa (duplicado)
+                const isDuplicate = duplicados.has(clave) && duplicados.get(clave).length > 1;
+                const rowClass = isDuplicate ? 'class="duplicado"' : '';
+                const rowNumber = idx + 1; // La fila en la hoja
 
-      if (equipo === 'Vehículo') {
-        container.innerHTML = `
-          <label for="km">KM:</label>
-          <input type="number" id="km" required min="0" step="1">
-        `;
-      } else if (equipo === 'Maquinaria') {
-        container.innerHTML = `
-          <label for="hrs">HRS:</label>
-          <input type="number" id="hrs" required min="0" step="0.1">
-        `;
-      }
-    }
+                let rowHtml = "";
+                fila.forEach((celda) => {
+                    rowHtml += `<td>${celda}</td>`;
+                });
+                
+                rowHtml += `<td><button class="delete-btn" onclick="eliminarRegistro(${rowNumber})">❌ Eliminar</button></td>`;
+                tablaBody.innerHTML += `<tr ${rowClass}>${rowHtml}</tr>`;
+            });
+        }
 
-    function enviarDatos() {
-      const fecha      = document.getElementById('fecha').value;
-      const equipo     = document.getElementById('equipo').value;
-      const frente     = document.getElementById('frente').value;
-      const serie      = document.getElementById('serie').value;
-      const trabajador = document.getElementById('trabajador').value;
-      const estado     = document.getElementById('estado').value;
+        function descargarExcel() {
+            const sheetId = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI"; // ID de tu hoja
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
+            window.open(url, "_blank");
+        }
 
-      let km = "", hrs = "";
-      if (equipo === "Vehículo") {
-        km = document.getElementById('km')?.value || "";
-      } else if (equipo === "Maquinaria") {
-        hrs = document.getElementById('hrs')?.value || "";
-      }
+        async function eliminarRegistro(filaAeliminar) {
+            if (!confirm('¿Estás seguro de que quieres eliminar este registro? Esta acción es irreversible.')) {
+                return;
+            }
+        
+            const modal = document.getElementById('loader');
+            modal.style.display = 'block';
+            modal.innerText = '⏳ Eliminando registro...';
+        
+            try {
+                // 👇 URL DE TU WEBAPP para la acción de DELETE
+                const url = 'https://script.google.com/macros/s/AKfycbxdbrnxexTVqGi_rlKVp95QAZmrTnTA1GKIricVTVnhAsK5hGj3v9kSlom-9wj1u3hc/exec?action=delete&row=' + filaAeliminar;
+                
+                await fetch(url, {
+                    method: 'POST',
+                    mode: 'no-cors'
+                });
+            
+                alert('✅ Registro eliminado correctamente.');
+                await cargarDatos();
+            } catch (error) {
+                console.error('Error al eliminar el registro:', error);
+                alert('❌ Error al eliminar el registro: ' + error.message);
+            } finally {
+                modal.style.display = 'none';
+            }
+        }
 
-      if (!fecha || !equipo || !frente || !serie || !trabajador || !estado || (!km && !hrs)) {
-        mostrarMensaje("❌ Todos los campos son obligatorios", "red");
-        return;
-      }
-
-      const modal = document.getElementById('modalCargando');
-      modal.style.display = 'block';
-      document.getElementById('mensaje').innerText = '';
-
-      const datos = { fecha, equipo, frente, serie, km, hrs, trabajador, estado };
-
-      // 👇 URL DE TU WEBAPP
-      fetch('https://script.google.com/macros/s/AKfycbxdbrnxexTVqGi_rlKVp95QAZmrTnTA1GKIricVTVnhAsK5hGj3v9kSlom-9wj1u3hc/exec', {
-        method: 'POST',
-        mode: 'no-cors',
-        body: JSON.stringify(datos),
-        headers: { 'Content-Type': 'application/json' }
-      })
-      .then(() => {
-        mostrarMensaje("✅ Registro enviado correctamente", "green");
-        limpiarFormulario();
-      })
-      .catch(error => {
-        mostrarMensaje("❌ Error de conexión: " + error.message, "red");
-        console.error(error);
-      })
-      .finally(() => {
-        modal.style.display = 'none';
-      });
-    }
-
-    function mostrarMensaje(texto, color) {
-      const mensaje = document.getElementById("mensaje");
-      mensaje.innerText = texto;
-      mensaje.style.color = color;
-    }
-
-    function limpiarFormulario() {
-      document.getElementById('fecha').value = "";
-      document.getElementById('equipo').value = "";
-      document.getElementById('frente').value = "";
-      document.getElementById('serie').value = "";
-      document.getElementById('trabajador').value = "";
-      document.getElementById('estado').value = "";
-      document.getElementById('campoMedidaContainer').innerHTML = "";
-    }
-  </script>
+        cargarDatos();
+    </script>
 </body>
 </html>
-
 
 
 
