@@ -1,121 +1,115 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Panel de Administración</title>
-    <style>
-        body { font-family: 'Georgia', serif; margin: 0; background-color: #f8f9fa; color: #343a40; line-height: 1.6; }
-        .container { max-width: 1000px; margin: 50px auto; padding: 30px; background-color: #ffffff; border: 1px solid #e9ecef; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        h2 { text-align: center; color: #495057; font-size: 2rem; margin-bottom: 5px; }
-        p { text-align: center; color: #6c757d; margin-top: 0; }
-        #loader { text-align: center; font-size: 1rem; color: #007bff; margin-bottom: 25px; }
-        .toolbar { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #e9ecef; margin-bottom: 25px; flex-wrap: wrap; gap: 10px; }
-        .toolbar label { font-weight: 600; color: #495057; }
-        .toolbar select, .toolbar button { padding: 10px 15px; border: 1px solid #ced4da; border-radius: 4px; font-size: 0.9rem; cursor: pointer; transition: all 0.2s ease-in-out; }
-        .toolbar select { background-color: #ffffff; }
-        .toolbar button { background-color: #28a745; color: white; border: none; }
-        .toolbar button:hover { background-color: #218838; }
-        table { width: 100%; border-collapse: collapse; margin-top: 25px; font-size: 0.9rem; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #dee2e6; }
-        th { background-color: #e9ecef; color: #495057; font-weight: bold; text-transform: uppercase; }
-        tr:hover { background-color: #f1f3f5; }
-        .duplicado { background-color: #dc3545 !important; color: white; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Panel de Administración</title>
+  <style>
+    body { font-family: 'Georgia', serif; margin: 0; background-color: #f8f9fa; color: #343a40; line-height: 1.6; }
+    .container { max-width: 1000px; margin: 50px auto; padding: 30px; background-color: #ffffff; border: 1px solid #e9ecef; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    h2 { text-align: center; color: #495057; font-size: 2rem; margin-bottom: 5px; }
+    p { text-align: center; color: #6c757d; margin-top: 0; }
+    #loader { text-align: center; font-size: 1rem; color: #007bff; margin-bottom: 25px; }
+    .toolbar { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #e9ecef; margin-bottom: 25px; flex-wrap: wrap; gap: 10px; }
+    .toolbar label { font-weight: 600; color: #495057; }
+    .toolbar select, .toolbar button { padding: 10px 15px; border: 1px solid #ced4da; border-radius: 4px; font-size: 0.9rem; cursor: pointer; transition: all 0.2s ease-in-out; }
+    .toolbar select { background-color: #ffffff; }
+    .toolbar button { background-color: #28a745; color: white; border: none; }
+    .toolbar button:hover { background-color: #218838; }
+    table { width: 100%; border-collapse: collapse; margin-top: 25px; font-size: 0.9rem; }
+    th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #dee2e6; }
+    th { background-color: #e9ecef; color: #495057; font-weight: bold; text-transform: uppercase; }
+    tr:hover { background-color: #f1f3f5; }
+    .duplicado { background-color: #dc3545 !important; color: white; }
+    td button { background-color: #dc3545; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+    td button:hover { background-color: #c82333; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Panel de Administración</h2>
-        <p>Visualiza y filtra los registros directamente:</p>
+  <div class="container">
+    <h2>Panel de Administración</h2>
+    <p>Visualiza y filtra los registros directamente:</p>
 
-        <div id="loader">⏳ Cargando registros...</div>
+    <div id="loader">⏳ Cargando registros...</div>
 
-        <div class="toolbar">
-            <label>Filtro por Equipo:</label>
-            <select id="filtroEquipo" onchange="renderTable()">
-                <option value="">Todos</option>
-                <option value="Vehículo">Vehículo</option>
-                <option value="Maquinaria">Maquinaria</option>
-            </select>
-            <button onclick="descargarExcel()">📥 Exportar a Excel</button>
-        </div>
-
-        <table id="tablaDatos"></table>
+    <div class="toolbar">
+      <label>Filtro por Equipo:</label>
+      <select id="filtroEquipo" onchange="renderTable()">
+        <option value="">Todos</option>
+        <option value="Vehículo">Vehículo</option>
+        <option value="Maquinaria">Maquinaria</option>
+      </select>
+      <button onclick="descargarExcel()">📥 Exportar a Excel</button>
     </div>
 
-    <script>
-        let registros = [];
+    <table id="tablaDatos"></table>
+  </div>
 
-        async function cargarDatos() {
-            const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
-            try {
-                const res = await fetch(url);
-                const text = await res.text();
-                registros = text.split("\n").map(row => row.split(","));
-                renderTable();
-            } catch (error) {
-                console.error("Error al cargar los datos:", error);
-                document.getElementById("loader").innerText = "❌ Error al cargar los datos.";
-            } finally {
-                document.getElementById("loader").style.display = "none";
-            }
+  <script>
+    let registros = [];
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxdbrnxexTVqGi_rlKVp95QAZmrTnTA1GKIricVTVnhAsK5hGj3v9kSlom-9wj1u3hc/exec";
+
+    async function cargarDatos() {
+      const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
+      try {
+        const res = await fetch(url);
+        const text = await res.text();
+        registros = text.split("\n").map(row => row.split(","));
+        renderTable();
+      } catch (error) {
+        console.error("Error al cargar los datos:", error);
+        document.getElementById("loader").innerText = "❌ Error al cargar los datos.";
+      } finally {
+        document.getElementById("loader").style.display = "none";
+      }
+    }
+
+    function renderTable() {
+      const tabla = document.getElementById("tablaDatos");
+      tabla.innerHTML = "";
+      const filtro = document.getElementById("filtroEquipo").value.toLowerCase();
+
+      const headers = registros[0];
+      tabla.innerHTML += `<tr>${headers.map(c => `<th>${c}</th>`).join("")}<th>Acción</th></tr>`;
+
+      registros.forEach((fila, idx) => {
+        if (idx === 0) return;
+        if (filtro && fila[1].toLowerCase() !== filtro) return;
+
+        let rowHtml = fila.map(c => `<td>${c}</td>`).join("");
+        const rowNum = idx + 1; // fila real en hoja
+        rowHtml += `<td><button onclick="eliminarFila(${rowNum})">Eliminar</button></td>`;
+
+        tabla.innerHTML += `<tr>${rowHtml}</tr>`;
+      });
+    }
+
+    async function eliminarFila(row) {
+      if (!confirm("⚠️ ¿Seguro que deseas eliminar este registro?")) return;
+      try {
+        const res = await fetch(`${WEB_APP_URL}?action=delete&row=${row}`);
+        const data = await res.json();
+        if (data.status === "success") {
+          alert("✅ Registro eliminado");
+          location.reload();
+        } else {
+          alert("❌ Error: " + data.message);
         }
+      } catch (err) {
+        console.error(err);
+        alert("❌ Error de conexión al intentar eliminar");
+      }
+    }
 
-        function renderTable() {
-            const tabla = document.getElementById("tablaDatos");
-            tabla.innerHTML = "";
-            const filtro = document.getElementById("filtroEquipo").value.toLowerCase();
-            const duplicados = new Map();
+    function descargarExcel() {
+      const sheetId = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI";
+      window.open(`https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`, "_blank");
+    }
 
-            registros.forEach((fila, idx) => {
-                if (idx === 0) return;
-                const serie = (fila[3] || "").trim().toLowerCase();
-                const km = (fila[4] || "").trim().toLowerCase();
-                if (serie && km) {
-                    const clave = serie + "-" + km;
-                    if (duplicados.has(clave)) {
-                        duplicados.set(clave, [...duplicados.get(clave), idx]);
-                    } else {
-                        duplicados.set(clave, [idx]);
-                    }
-                }
-            });
-
-            const headers = registros[0];
-            const ths = headers.map(c => `<th>${c}</th>`).join("");
-            tabla.innerHTML += `<tr>${ths}</tr>`;
-
-            registros.forEach((fila, idx) => {
-                if (idx === 0) return;
-                if (filtro && fila[1].toLowerCase() !== filtro) return;
-
-                const serie = (fila[3] || "").trim().toLowerCase();
-                const km = (fila[4] || "").trim().toLowerCase();
-                const clave = serie + "-" + km;
-
-                let rowHtml = "";
-                fila.forEach((celda, colIdx) => {
-                    let clase = "";
-                    if (duplicados.has(clave) && duplicados.get(clave).length > 1) {
-                        if (colIdx === 3 || colIdx === 4) {
-                            clase = "duplicado";
-                        }
-                    }
-                    rowHtml += `<td class="${clase}">${celda}</td>`;
-                });
-                tabla.innerHTML += `<tr>${rowHtml}</tr>`;
-            });
-        }
-
-        function descargarExcel() {
-            const sheetId = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI";  
-            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
-            window.open(url, "_blank");
-        }
-
-        cargarDatos();
-    </script>
+    cargarDatos();
+  </script>
 </body>
 </html>
+
 
 
 
