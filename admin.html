@@ -1,138 +1,147 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Panel de Administración</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 0; background-color: #f8f9fa; color: #343a40; }
-    .container { max-width: 1000px; margin: 40px auto; padding: 20px; background: #fff; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    h2 { text-align: center; margin-bottom: 10px; }
-    p { text-align: center; color: #6c757d; margin-top: 0; }
-    #loader { text-align: center; font-size: 14px; color: #007bff; margin-bottom: 15px; }
-    .toolbar { display: flex; justify-content: space-between; margin-bottom: 15px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { border: 1px solid #dee2e6; padding: 10px; text-align: center; }
-    th { background: #343a40; color: white; }
-    tr:nth-child(even) { background: #f8f9fa; }
-    tr:hover { background: #f1f3f5; }
-    .duplicado { background-color: red !important; color: white; }
-    button { padding: 6px 12px; cursor: pointer; border: none; border-radius: 4px; }
-    .eliminar-btn { background: #dc3545; color: white; }
-    .eliminar-btn:hover { background: #a71d2a; }
-  </style>
+    <meta charset="UTF-8">
+    <title>Panel de Administración</title>
+    <style>
+        body { font-family: 'Georgia', serif; margin: 0; background-color: #f8f9fa; color: #343a40; line-height: 1.6; }
+        .container { max-width: 1000px; margin: 50px auto; padding: 30px; background-color: #ffffff; border: 1px solid #e9ecef; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        h2 { text-align: center; color: #495057; font-size: 2rem; margin-bottom: 5px; }
+        p { text-align: center; color: #6c757d; margin-top: 0; }
+        #loader { text-align: center; font-size: 1rem; color: #007bff; margin-bottom: 25px; }
+        .toolbar { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #e9ecef; margin-bottom: 25px; flex-wrap: wrap; gap: 10px; }
+        .toolbar label { font-weight: 600; color: #495057; }
+        .toolbar select, .toolbar button { padding: 10px 15px; border: 1px solid #ced4da; border-radius: 4px; font-size: 0.9rem; cursor: pointer; transition: all 0.2s ease-in-out; }
+        .toolbar select { background-color: #ffffff; }
+        .toolbar button { background-color: #28a745; color: white; border: none; }
+        .toolbar button:hover { background-color: #218838; }
+        table { width: 100%; border-collapse: collapse; margin-top: 25px; font-size: 0.9rem; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #dee2e6; }
+        th { background-color: #e9ecef; color: #495057; font-weight: bold; text-transform: uppercase; }
+        tr:hover { background-color: #f1f3f5; }
+        .duplicado { background-color: #dc3545 !important; color: white; }
+        td:last-child { text-align: center; }
+        td button { padding: 6px 12px; font-size: 12px; background-color: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.3s ease; }
+        td button:hover { background-color: #c0392b; }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Panel de Administración</h2>
-    <p>Visualiza, filtra y gestiona los registros:</p>
+    <div class="container">
+        <h2>Panel de Administración</h2>
+        <p>Visualiza, filtra y gestiona los registros.</p>
 
-    <div id="loader">⏳ Cargando registros...</div>
+        <div id="loader">⏳ Cargando registros...</div>
 
-    <div class="toolbar">
-      <div>
-        <label>Filtrar por Equipo:</label>
-        <select id="filtroEquipo" onchange="renderTable()">
-          <option value="">Todos</option>
-          <option value="Vehículo">Vehículo</option>
-          <option value="Maquinaria">Maquinaria</option>
-        </select>
-      </div>
-      <button onclick="descargarExcel()">📥 Exportar a Excel</button>
+        <div class="toolbar">
+            <label>Filtro por Equipo:</label>
+            <select id="filtroEquipo" onchange="renderTable()">
+                <option value="">Todos</option>
+                <option value="Vehículo">Vehículo</option>
+                <option value="Maquinaria">Maquinaria</option>
+            </select>
+            <button onclick="descargarExcel()">📥 Exportar a Excel</button>
+        </div>
+
+        <table id="tablaDatos"></table>
     </div>
 
-    <table id="tablaDatos"></table>
-  </div>
+    <script>
+        let registros = [];
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxdbrnxexTVqGi_rlKVp95QAZmrTnTA1GKIricVTVnhAsK5hGj3v9kSlom-9wj1u3hc/exec";
 
-  <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwr8cCeBB5_sSkT-NpQ70A5i2DcKsvsMVNE86_lStsMSPDSHvSBEElWdU0Pb1ytTNnS/exec";
-    let registros = [];
-
-    async function cargarDatos() {
-      const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
-      try {
-        const res = await fetch(url);
-        const text = await res.text();
-        registros = text.split("\n").map(row => row.split(","));
-        renderTable();
-      } catch (err) {
-        document.getElementById("loader").innerText = "❌ Error al cargar los datos";
-      } finally {
-        document.getElementById("loader").style.display = "none";
-      }
-    }
-
-    function renderTable() {
-      const tabla = document.getElementById("tablaDatos");
-      tabla.innerHTML = "";
-      const filtro = document.getElementById("filtroEquipo").value.toLowerCase();
-
-      const duplicados = new Map();
-      registros.forEach((fila, idx) => {
-        if (idx === 0) return;
-        const serie = (fila[3] || "").trim().toLowerCase();
-        const km = (fila[4] || "").trim().toLowerCase();
-        if (serie && km) {
-          const clave = serie + "-" + km;
-          if (duplicados.has(clave)) {
-            duplicados.set(clave, [...duplicados.get(clave), idx]);
-          } else {
-            duplicados.set(clave, [idx]);
-          }
+        async function cargarDatos() {
+            const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
+            try {
+                const res = await fetch(url);
+                const text = await res.text();
+                registros = text.split("\n").map(row => row.split(","));
+                renderTable();
+            } catch (error) {
+                console.error("Error al cargar los datos:", error);
+                document.getElementById("loader").innerText = "❌ Error al cargar los datos.";
+            } finally {
+                document.getElementById("loader").style.display = "none";
+            }
         }
-      });
 
-      const headers = registros[0];
-      const ths = headers.map(c => `<th>${c}</th>`).join("") + "<th>Acciones</th>";
-      tabla.innerHTML += `<tr>${ths}</tr>`;
+        function renderTable() {
+            const tabla = document.getElementById("tablaDatos");
+            tabla.innerHTML = "";
+            const filtro = document.getElementById("filtroEquipo").value.toLowerCase();
+            const duplicados = new Map();
 
-      registros.forEach((fila, idx) => {
-        if (idx === 0) return;
-        if (filtro && fila[1].toLowerCase() !== filtro) return;
+            registros.forEach((fila, idx) => {
+                if (idx === 0) return;
+                const serie = (fila[3] || "").trim().toLowerCase();
+                const km = (fila[4] || "").trim().toLowerCase();
+                if (serie && km) {
+                    const clave = serie + "-" + km;
+                    if (duplicados.has(clave)) {
+                        duplicados.set(clave, [...duplicados.get(clave), idx]);
+                    } else {
+                        duplicados.set(clave, [idx]);
+                    }
+                }
+            });
 
-        const serie = (fila[3] || "").trim().toLowerCase();
-        const km = (fila[4] || "").trim().toLowerCase();
-        const clave = serie + "-" + km;
+            const headers = registros[0];
+            const ths = headers.map(c => `<th>${c}</th>`).join("") + "<th>Acciones</th>";
+            tabla.innerHTML += `<tr>${ths}</tr>`;
 
-        let rowHtml = "";
-        fila.forEach((celda, colIdx) => {
-          let clase = "";
-          if (duplicados.has(clave) && duplicados.get(clave).length > 1) {
-            if (colIdx === 3 || colIdx === 4) clase = "duplicado";
-          }
-          rowHtml += `<td class="${clase}">${celda}</td>`;
-        });
+            registros.forEach((fila, idx) => {
+                if (idx === 0) return;
+                if (filtro && fila[1].toLowerCase() !== filtro) return;
 
-        rowHtml += `<td><button class="eliminar-btn" onclick="eliminarFila(${idx + 1})">Eliminar</button></td>`;
-        tabla.innerHTML += `<tr>${rowHtml}</tr>`;
-      });
-    }
+                const serie = (fila[3] || "").trim().toLowerCase();
+                const km = (fila[4] || "").trim().toLowerCase();
+                const clave = serie + "-" + km;
 
-    async function eliminarFila(row) {
-      if (!confirm("⚠️ ¿Seguro que deseas eliminar este registro?")) return;
-      try {
-        const res = await fetch(`${WEB_APP_URL}?action=delete&row=${row}`, { method: "GET" });
-        const data = await res.json();
-        if (data.status === "success") {
-          alert("✅ Registro eliminado");
-          location.reload();
-        } else {
-          alert("❌ Error: " + data.message);
+                let rowHtml = "";
+                fila.forEach((celda, colIdx) => {
+                    let clase = "";
+                    if (duplicados.has(clave) && duplicados.get(clave).length > 1) {
+                        if (colIdx === 3 || colIdx === 4) {
+                            clase = "duplicado";
+                        }
+                    }
+                    rowHtml += `<td class="${clase}">${celda}</td>`;
+                });
+
+                rowHtml += `<td><button onclick="eliminarFila(${idx + 1})">Eliminar</button></td>`;
+                tabla.innerHTML += `<tr>${rowHtml}</tr>`;
+            });
         }
-      } catch (err) {
-        alert("❌ Error de conexión");
-        console.error(err);
-      }
-    }
 
-    function descargarExcel() {
-      const sheetId = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI";
-      window.open(`https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`, "_blank");
-    }
+        async function eliminarFila(row) {
+            if (!confirm("⚠️ ¿Seguro que deseas eliminar este registro?")) return;
 
-    cargarDatos();
-  </script>
+            try {
+                await fetch(WEB_APP_URL, {
+                    method: "POST",
+                    mode: "no-cors", // 👈 igual que en tu index
+                    body: JSON.stringify({ action: "delete", row }),
+                    headers: { "Content-Type": "application/json" }
+                });
+
+                alert("✅ Registro eliminado");
+                location.reload(); // 👈 recarga para reflejar cambios
+            } catch (err) {
+                alert("❌ Error al intentar eliminar");
+                console.error(err);
+            }
+        }
+
+        function descargarExcel() {
+            const sheetId = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI";  
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
+            window.open(url, "_blank");
+        }
+
+        cargarDatos();
+    </script>
 </body>
 </html>
+
 
 
 
