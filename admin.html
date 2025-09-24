@@ -47,16 +47,14 @@
 
     <script>
         let registros = [];
-        // Asegúrate de que este URL coincida con tu WebApp
+        // VERIFICA que esta URL de WEB APP sea la correcta y esté desplegada:
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxdbrnxexTVqGi_rlKVp95QAZmrTnTA1GKIricVTVnhAsK5hGj3v9kSlom-9wj1u3hc/exec";
 
         async function cargarDatos() {
-            // Asegúrate de que este URL sea la publicación de tu hoja como CSV
             const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
             try {
                 const res = await fetch(url);
                 const text = await res.text();
-                // La primera fila son encabezados, el resto son datos
                 registros = text.split("\n").map(row => row.split(","));
                 renderTable();
             } catch (error) {
@@ -73,7 +71,6 @@
             const filtro = document.getElementById("filtroEquipo").value.toLowerCase();
             const duplicados = new Map();
 
-            // Lógica para encontrar duplicados (correcta)
             registros.forEach((fila, idx) => {
                 if (idx === 0) return;
                 const serie = (fila[3] || "").trim().toLowerCase();
@@ -93,8 +90,7 @@
             tabla.innerHTML += `<tr>${ths}</tr>`;
 
             registros.forEach((fila, idx) => {
-                if (idx === 0) return; // Omite encabezados
-
+                if (idx === 0) return;
                 if (filtro && fila[1].toLowerCase() !== filtro) return;
 
                 const serie = (fila[3] || "").trim().toLowerCase();
@@ -112,31 +108,33 @@
                     rowHtml += `<td class="${clase}">${celda}</td>`;
                 });
 
-                // El número de fila real en la Hoja de Cálculo es idx + 1
+                // Pasa el número de fila real (ej. 2, 3, 4)
                 rowHtml += `<td><button onclick="eliminarFila(${idx + 1})">Eliminar</button></td>`;
                 tabla.innerHTML += `<tr>${rowHtml}</tr>`;
             });
         }
 
-        // Función CORREGIDA: Recibe el número de fila real de la Hoja de Cálculo (idx)
+        // FUNCIÓN CORREGIDA para recibir el número de fila correcto
       async function eliminarFila(rowNumber) {
         if (confirm("¿Estás seguro de que quieres eliminar este registro?")) {
           try {
+            // Se envía el número de fila (rowNumber) directamente, sin sumarle 1 de nuevo
             const res = await fetch(
-              // Se envía el número de fila que se recibió
               `${WEB_APP_URL}?action=delete&row=${rowNumber}`, 
               { method: "GET" }
             );
 
-            if (res.ok) {
+            // Si la respuesta es OK (200), funciona
+            if (res.ok) { 
               alert("✅ Registro eliminado con éxito. Recargando tabla...");
-              await cargarDatos(); // recarga la tabla
+              await cargarDatos();
             } else {
-              alert("❌ Error al eliminar: " + (await res.text()));
+              alert("❌ Error al eliminar. Revisa la consola para más detalles.");
+              console.error("Error del servidor (App Script):", await res.text());
             }
           } catch (error) {
             alert("❌ Error de conexión al intentar eliminar el registro.");
-            console.error(error);
+            console.error("Error de Fetch (cliente):", error);
           }
         }
       }
