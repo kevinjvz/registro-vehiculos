@@ -112,24 +112,26 @@
             });
         }
 
-        async function eliminarFila(row) {
-            if (!confirm("⚠️ ¿Seguro que deseas eliminar este registro?")) return;
+      async function eliminarFila(idx) {
+  if (confirm("¿Estás seguro de que quieres eliminar este registro?")) {
+    try {
+      const res = await fetch(
+        `${WEB_APP_URL}?action=delete&row=${idx + 1}`, 
+        { method: "GET" }
+      );
 
-            try {
-                await fetch(WEB_APP_URL, {
-                    method: "POST",
-                    mode: "no-cors",
-                    body: JSON.stringify({ action: "delete", row }),
-                    headers: { "Content-Type": "application/json" }
-                });
-
-                alert("✅ Registro eliminado");
-                location.reload();
-            } catch (err) {
-                alert("❌ Error al intentar eliminar");
-                console.error(err);
-            }
-        }
+      if (res.ok) {
+        alert("✅ Registro eliminado con éxito. Recargando tabla...");
+        await cargarDatos(); // recarga la tabla
+      } else {
+        alert("❌ Error al eliminar: " + (await res.text()));
+      }
+    } catch (error) {
+      alert("❌ Error de conexión al intentar eliminar el registro.");
+      console.error(error);
+    }
+  }
+}
 
         function descargarExcel() {
             const sheetId = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI";  
@@ -141,6 +143,7 @@
     </script>
 </body>
 </html>
+
 
 
 
