@@ -61,10 +61,11 @@
 
     <script>
         let registros = [];
-        // URL de tu hoja de Google Sheets publicada como CSV
+        // 👇👇 AJUSTA ESTAS 2 LÍNEAS CON LA INFORMACIÓN REAL DE TU HOJA 👇👇
         const DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
-        // ID de tu hoja para la descarga en formato Excel
-        const SHEET_ID = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI"; // <--- ASEGÚRATE DE QUE ESTE SEA TU ID REAL
+        const SHEET_ID = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI"; 
+        // 👆👆 AJUSTA ESTAS 2 LÍNEAS CON LA INFORMACIÓN REAL DE TU HOJA 👆👆
+
 
         async function cargarDatos() {
             try {
@@ -87,23 +88,34 @@
             const filtro = document.getElementById("filtroEquipo").value.toLowerCase();
             
             // MAPAS para Cálculos y Alertas
-            const acumulados = new Map(); // KM acumulado total por Serie
+            const acumulados = new Map(); // KM acumulado total por Serie (después de reset)
             const duplicados = new Map(); // Duplicados por Serie-KM
 
-            // 1. PRIMERA PASADA: Calcular Acumulados y Duplicados
+            // 1. PRIMERA PASADA: Calcular Acumulados y Duplicados con REINICIO
             registros.forEach((fila, idx) => {
-                if (idx === 0 || fila.length < 5) return; // Saltar encabezado o filas incompletas
+                // Saltar encabezado (idx=0) o filas incompletas (debe tener al menos la Columna H)
+                if (idx === 0 || fila.length < 8) return; 
 
                 const equipo = (fila[1] || "").trim().toLowerCase();
-                const serie = (fila[3] || "").trim().toUpperCase(); // Número de Serie (Columna D)
-                let kmValor = parseFloat(fila[4]) || 0; // KM (Columna E)
+                const serie = (fila[3] || "").trim().toUpperCase(); // Columna D: Número de Serie/ECO
+                let kmValor = parseFloat(fila[4]) || 0;             // Columna E: KM
+                const estado = (fila[7] || "").trim().toUpperCase(); // Columna H: Estado del Equipo (para reset)
 
-                // Calcular el KM Acumulado para la alerta de Mantenimiento
+                // Lógica para Vehículos
                 if (equipo === "vehículo" && serie) {
-                    const currentTotal = acumulados.get(serie) || 0;
-                    acumulados.set(serie, currentTotal + kmValor);
+                    
+                    // LÓGICA CRÍTICA DE REINICIO POR MARCA MANUAL
+                    if (estado === "MANTENIMIENTO_RESET") {
+                        // Si la fila indica RESET, reinicia el acumulador para esa serie a 0
+                        acumulados.set(serie, 0);
+                        
+                    } else {
+                         // Si es un registro normal, sumarlo al acumulado actual
+                        const currentTotal = acumulados.get(serie) || 0;
+                        acumulados.set(serie, currentTotal + kmValor);
+                    }
                 }
-
+                
                 // Lógica de Duplicados (Serie + KM)
                 const claveDuplicado = serie + "-" + kmValor;
                 if (serie && kmValor) {
@@ -111,26 +123,25 @@
                 }
             });
 
-            // 2. Renderizar la tabla
+            // 2. Renderizar la tabla (Esta sección usa el acumulado final de la pasada anterior)
             const headers = registros[0];
             const ths = headers.map(c => `<th>${c}</th>`).join("");
             // Añadir la columna de Alerta
             tabla.innerHTML += `<tr>${ths}<th>ALERTA MANTENIMIENTO</th></tr>`;
 
             registros.forEach((fila, idx) => {
-                if (idx === 0 || fila.length < 5) return; // Saltar encabezado o filas incompletas
-                
-                // Aplicar Filtro
+                if (idx === 0 || fila.length < 8) return; 
                 if (filtro && fila[1].toLowerCase() !== filtro) return;
 
                 const equipo = (fila[1] || "").trim().toLowerCase();
                 const serie = (fila[3] || "").trim().toUpperCase();
-                const totalKm = acumulados.get(serie) || 0;
+                // Aquí usamos el acumulado final, que ya pasó por los resets
+                const totalKm = acumulados.get(serie) || 0; 
                 
                 let claseFila = "";
                 let textoAlerta = "";
 
-                // **Verificación de Mantenimiento**
+                // **Verificación de Mantenimiento** (Umbral: >= 5000 KM)
                 if (equipo === "vehículo") {
                     if (totalKm >= 5000) {
                         claseFila = "alerta-mantenimiento"; 
@@ -153,7 +164,7 @@
                     let claseCelda = "";
                     // Marcar la celda si hay duplicado
                     if (duplicados.has(claveDuplicado) && duplicados.get(claveDuplicado).length > 1) {
-                        if (colIdx === 3 || colIdx === 4) { // Columnas de Serie (3) y KM (4)
+                        if (colIdx === 3 || colIdx === 4) { 
                             claseCelda = "duplicado"; 
                         }
                     }
