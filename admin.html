@@ -5,7 +5,7 @@
     <title>Panel de Administración</title>
     <style>
         body { font-family: 'Georgia', serif; margin: 0; background-color: #f8f9fa; color: #343a40; line-height: 1.6; }
-        .container { max-width: 1000px; margin: 50px auto; padding: 30px; background-color: #ffffff; border: 1px solid #e9ecef; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .container { max-width: 1200px; margin: 50px auto; padding: 30px; background-color: #ffffff; border: 1px solid #e9ecef; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         h2 { text-align: center; color: #495057; font-size: 2rem; margin-bottom: 5px; }
         p { text-align: center; color: #6c757d; margin-top: 0; }
         #loader { text-align: center; font-size: 1rem; color: #007bff; margin-bottom: 25px; }
@@ -19,7 +19,24 @@
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #dee2e6; }
         th { background-color: #e9ecef; color: #495057; font-weight: bold; text-transform: uppercase; }
         tr:hover { background-color: #f1f3f5; }
+        
+        /* ESTILOS DE MANTENIMIENTO */
         .duplicado { background-color: #dc3545 !important; color: white; }
+        
+        /* Estilo para las filas que requieren Mantenimiento (>= 5000 KM) */
+        .alerta-mantenimiento {
+            background-color: #f8d7da !important; /* Rojo claro */
+            color: #721c24; /* Rojo oscuro para el texto */
+            font-weight: bold;
+            border-left: 5px solid #dc3545; /* Barra roja lateral */
+        }
+
+        /* Estilo para las filas que se acercan (4000-4999 KM) */
+        .alerta-preventiva {
+            background-color: #fff3cd !important; /* Amarillo claro */
+            color: #856404; /* Amarillo oscuro para el texto */
+        }
+        
     </style>
 </head>
 <body>
@@ -44,12 +61,16 @@
 
     <script>
         let registros = [];
+        // URL de tu hoja de Google Sheets publicada como CSV
+        const DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
+        // ID de tu hoja para la descarga en formato Excel
+        const SHEET_ID = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI"; // <--- ASEGÚRATE DE QUE ESTE SEA TU ID REAL
 
         async function cargarDatos() {
-            const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
             try {
-                const res = await fetch(url);
+                const res = await fetch(DATA_URL);
                 const text = await res.text();
+                // Separa por salto de línea y luego por coma
                 registros = text.split("\n").map(row => row.split(","));
                 renderTable();
             } catch (error) {
@@ -64,51 +85,91 @@
             const tabla = document.getElementById("tablaDatos");
             tabla.innerHTML = "";
             const filtro = document.getElementById("filtroEquipo").value.toLowerCase();
-            const duplicados = new Map();
+            
+            // MAPAS para Cálculos y Alertas
+            const acumulados = new Map(); // KM acumulado total por Serie
+            const duplicados = new Map(); // Duplicados por Serie-KM
 
+            // 1. PRIMERA PASADA: Calcular Acumulados y Duplicados
             registros.forEach((fila, idx) => {
-                if (idx === 0) return;
-                const serie = (fila[3] || "").trim().toLowerCase();
-                const km = (fila[4] || "").trim().toLowerCase();
-                if (serie && km) {
-                    const clave = serie + "-" + km;
-                    if (duplicados.has(clave)) {
-                        duplicados.set(clave, [...duplicados.get(clave), idx]);
-                    } else {
-                        duplicados.set(clave, [idx]);
-                    }
+                if (idx === 0 || fila.length < 5) return; // Saltar encabezado o filas incompletas
+
+                const equipo = (fila[1] || "").trim().toLowerCase();
+                const serie = (fila[3] || "").trim().toUpperCase(); // Número de Serie (Columna D)
+                let kmValor = parseFloat(fila[4]) || 0; // KM (Columna E)
+
+                // Calcular el KM Acumulado para la alerta de Mantenimiento
+                if (equipo === "vehículo" && serie) {
+                    const currentTotal = acumulados.get(serie) || 0;
+                    acumulados.set(serie, currentTotal + kmValor);
+                }
+
+                // Lógica de Duplicados (Serie + KM)
+                const claveDuplicado = serie + "-" + kmValor;
+                if (serie && kmValor) {
+                    duplicados.set(claveDuplicado, (duplicados.get(claveDuplicado) || []).concat(idx));
                 }
             });
 
+            // 2. Renderizar la tabla
             const headers = registros[0];
             const ths = headers.map(c => `<th>${c}</th>`).join("");
-            tabla.innerHTML += `<tr>${ths}</tr>`;
+            // Añadir la columna de Alerta
+            tabla.innerHTML += `<tr>${ths}<th>ALERTA MANTENIMIENTO</th></tr>`;
 
             registros.forEach((fila, idx) => {
-                if (idx === 0) return;
+                if (idx === 0 || fila.length < 5) return; // Saltar encabezado o filas incompletas
+                
+                // Aplicar Filtro
                 if (filtro && fila[1].toLowerCase() !== filtro) return;
 
-                const serie = (fila[3] || "").trim().toLowerCase();
-                const km = (fila[4] || "").trim().toLowerCase();
-                const clave = serie + "-" + km;
+                const equipo = (fila[1] || "").trim().toLowerCase();
+                const serie = (fila[3] || "").trim().toUpperCase();
+                const totalKm = acumulados.get(serie) || 0;
+                
+                let claseFila = "";
+                let textoAlerta = "";
+
+                // **Verificación de Mantenimiento**
+                if (equipo === "vehículo") {
+                    if (totalKm >= 5000) {
+                        claseFila = "alerta-mantenimiento"; 
+                        textoAlerta = `🚨 MANT. REQUERIDO (${totalKm} KM)`;
+                    } else if (totalKm >= 4000) {
+                        claseFila = "alerta-preventiva"; 
+                        textoAlerta = `⚠️ PRÓXIMO MANT. (${totalKm} KM)`;
+                    } else {
+                        textoAlerta = `Total: ${totalKm} KM`;
+                    }
+                } else {
+                    textoAlerta = "No aplica (Maquinaria)";
+                }
+                
+                const km = parseFloat(fila[4]) || 0;
+                const claveDuplicado = serie + "-" + km;
 
                 let rowHtml = "";
                 fila.forEach((celda, colIdx) => {
-                    let clase = "";
-                    if (duplicados.has(clave) && duplicados.get(clave).length > 1) {
-                        if (colIdx === 3 || colIdx === 4) {
-                            clase = "duplicado";
+                    let claseCelda = "";
+                    // Marcar la celda si hay duplicado
+                    if (duplicados.has(claveDuplicado) && duplicados.get(claveDuplicado).length > 1) {
+                        if (colIdx === 3 || colIdx === 4) { // Columnas de Serie (3) y KM (4)
+                            claseCelda = "duplicado"; 
                         }
                     }
-                    rowHtml += `<td class="${clase}">${celda}</td>`;
+                    rowHtml += `<td class="${claseCelda}">${celda}</td>`;
                 });
-                tabla.innerHTML += `<tr>${rowHtml}</tr>`;
+                
+                // Añadir la celda de alerta
+                rowHtml += `<td class="${claseFila}">${textoAlerta}</td>`;
+
+                // Aplicar clase a toda la fila
+                tabla.innerHTML += `<tr class="${claseFila}"> ${rowHtml} </tr>`;
             });
         }
 
         function descargarExcel() {
-            const sheetId = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI";  
-            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
+            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=xlsx`;
             window.open(url, "_blank");
         }
 
@@ -116,8 +177,6 @@
     </script>
 </body>
 </html>
-
-
 
 
 
