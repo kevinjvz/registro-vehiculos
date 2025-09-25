@@ -5,7 +5,7 @@
     <title>Panel de Administración</title>
     <style>
         body { font-family: 'Georgia', serif; margin: 0; background-color: #f8f9fa; color: #343a40; line-height: 1.6; }
-        .container { max-width: 1200px; margin: 50px auto; padding: 30px; background-color: #ffffff; border: 1px solid #e9ecef; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .container { max-width: 1000px; margin: 50px auto; padding: 30px; background-color: #ffffff; border: 1px solid #e9ecef; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         h2 { text-align: center; color: #495057; font-size: 2rem; margin-bottom: 5px; }
         p { text-align: center; color: #6c757d; margin-top: 0; }
         #loader { text-align: center; font-size: 1rem; color: #007bff; margin-bottom: 25px; }
@@ -19,24 +19,7 @@
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #dee2e6; }
         th { background-color: #e9ecef; color: #495057; font-weight: bold; text-transform: uppercase; }
         tr:hover { background-color: #f1f3f5; }
-        
-        /* ESTILOS DE MANTENIMIENTO */
         .duplicado { background-color: #dc3545 !important; color: white; }
-        
-        /* Estilo para las filas que requieren Mantenimiento (>= 5000 KM) */
-        .alerta-mantenimiento {
-            background-color: #f8d7da !important; /* Rojo claro */
-            color: #721c24; /* Rojo oscuro para el texto */
-            font-weight: bold;
-            border-left: 5px solid #dc3545; /* Barra roja lateral */
-        }
-
-        /* Estilo para las filas que se acercan (4000-4999 KM) */
-        .alerta-preventiva {
-            background-color: #fff3cd !important; /* Amarillo claro */
-            color: #856404; /* Amarillo oscuro para el texto */
-        }
-        
     </style>
 </head>
 <body>
@@ -61,17 +44,12 @@
 
     <script>
         let registros = [];
-        // 👇👇 AJUSTA ESTAS 2 LÍNEAS CON LA INFORMACIÓN REAL DE TU HOJA 👇👇
-        const DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
-        const SHEET_ID = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI"; 
-        // 👆👆 AJUSTA ESTAS 2 LÍNEAS CON LA INFORMACIÓN REAL DE TU HOJA 👆👆
-
 
         async function cargarDatos() {
+            const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
             try {
-                const res = await fetch(DATA_URL);
+                const res = await fetch(url);
                 const text = await res.text();
-                // Separa por salto de línea y luego por coma
                 registros = text.split("\n").map(row => row.split(","));
                 renderTable();
             } catch (error) {
@@ -86,101 +64,51 @@
             const tabla = document.getElementById("tablaDatos");
             tabla.innerHTML = "";
             const filtro = document.getElementById("filtroEquipo").value.toLowerCase();
-            
-            // MAPAS para Cálculos y Alertas
-            const acumulados = new Map(); // KM acumulado total por Serie (después de reset)
-            const duplicados = new Map(); // Duplicados por Serie-KM
+            const duplicados = new Map();
 
-            // 1. PRIMERA PASADA: Calcular Acumulados y Duplicados con REINICIO
             registros.forEach((fila, idx) => {
-                // Saltar encabezado (idx=0) o filas incompletas (debe tener al menos la Columna H)
-                if (idx === 0 || fila.length < 8) return; 
-
-                const equipo = (fila[1] || "").trim().toLowerCase();
-                const serie = (fila[3] || "").trim().toUpperCase(); // Columna D: Número de Serie/ECO
-                let kmValor = parseFloat(fila[4]) || 0;             // Columna E: KM
-                const estado = (fila[7] || "").trim().toUpperCase(); // Columna H: Estado del Equipo (para reset)
-
-                // Lógica para Vehículos
-                if (equipo === "vehículo" && serie) {
-                    
-                    // LÓGICA CRÍTICA DE REINICIO POR MARCA MANUAL
-                    if (estado === "MANTENIMIENTO_RESET") {
-                        // Si la fila indica RESET, reinicia el acumulador para esa serie a 0
-                        acumulados.set(serie, 0);
-                        
+                if (idx === 0) return;
+                const serie = (fila[3] || "").trim().toLowerCase();
+                const km = (fila[4] || "").trim().toLowerCase();
+                if (serie && km) {
+                    const clave = serie + "-" + km;
+                    if (duplicados.has(clave)) {
+                        duplicados.set(clave, [...duplicados.get(clave), idx]);
                     } else {
-                         // Si es un registro normal, sumarlo al acumulado actual
-                        const currentTotal = acumulados.get(serie) || 0;
-                        acumulados.set(serie, currentTotal + kmValor);
+                        duplicados.set(clave, [idx]);
                     }
-                }
-                
-                // Lógica de Duplicados (Serie + KM)
-                const claveDuplicado = serie + "-" + kmValor;
-                if (serie && kmValor) {
-                    duplicados.set(claveDuplicado, (duplicados.get(claveDuplicado) || []).concat(idx));
                 }
             });
 
-            // 2. Renderizar la tabla (Esta sección usa el acumulado final de la pasada anterior)
             const headers = registros[0];
             const ths = headers.map(c => `<th>${c}</th>`).join("");
-            // Añadir la columna de Alerta
-            tabla.innerHTML += `<tr>${ths}<th>ALERTA MANTENIMIENTO</th></tr>`;
+            tabla.innerHTML += `<tr>${ths}</tr>`;
 
             registros.forEach((fila, idx) => {
-                if (idx === 0 || fila.length < 8) return; 
+                if (idx === 0) return;
                 if (filtro && fila[1].toLowerCase() !== filtro) return;
 
-                const equipo = (fila[1] || "").trim().toLowerCase();
-                const serie = (fila[3] || "").trim().toUpperCase();
-                // Aquí usamos el acumulado final, que ya pasó por los resets
-                const totalKm = acumulados.get(serie) || 0; 
-                
-                let claseFila = "";
-                let textoAlerta = "";
-
-                // **Verificación de Mantenimiento** (Umbral: >= 5000 KM)
-                if (equipo === "vehículo") {
-                    if (totalKm >= 5000) {
-                        claseFila = "alerta-mantenimiento"; 
-                        textoAlerta = `🚨 MANT. REQUERIDO (${totalKm} KM)`;
-                    } else if (totalKm >= 4000) {
-                        claseFila = "alerta-preventiva"; 
-                        textoAlerta = `⚠️ PRÓXIMO MANT. (${totalKm} KM)`;
-                    } else {
-                        textoAlerta = `Total: ${totalKm} KM`;
-                    }
-                } else {
-                    textoAlerta = "No aplica (Maquinaria)";
-                }
-                
-                const km = parseFloat(fila[4]) || 0;
-                const claveDuplicado = serie + "-" + km;
+                const serie = (fila[3] || "").trim().toLowerCase();
+                const km = (fila[4] || "").trim().toLowerCase();
+                const clave = serie + "-" + km;
 
                 let rowHtml = "";
                 fila.forEach((celda, colIdx) => {
-                    let claseCelda = "";
-                    // Marcar la celda si hay duplicado
-                    if (duplicados.has(claveDuplicado) && duplicados.get(claveDuplicado).length > 1) {
-                        if (colIdx === 3 || colIdx === 4) { 
-                            claseCelda = "duplicado"; 
+                    let clase = "";
+                    if (duplicados.has(clave) && duplicados.get(clave).length > 1) {
+                        if (colIdx === 3 || colIdx === 4) {
+                            clase = "duplicado";
                         }
                     }
-                    rowHtml += `<td class="${claseCelda}">${celda}</td>`;
+                    rowHtml += `<td class="${clase}">${celda}</td>`;
                 });
-                
-                // Añadir la celda de alerta
-                rowHtml += `<td class="${claseFila}">${textoAlerta}</td>`;
-
-                // Aplicar clase a toda la fila
-                tabla.innerHTML += `<tr class="${claseFila}"> ${rowHtml} </tr>`;
+                tabla.innerHTML += `<tr>${rowHtml}</tr>`;
             });
         }
 
         function descargarExcel() {
-            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=xlsx`;
+            const sheetId = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI";  
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
             window.open(url, "_blank");
         }
 
@@ -188,7 +116,6 @@
     </script>
 </body>
 </html>
-
 
 
 
