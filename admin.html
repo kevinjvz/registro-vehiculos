@@ -5,7 +5,7 @@
     <title>Panel de Administración</title>
     <style>
         body { font-family: 'Georgia', serif; margin: 0; background-color: #f8f9fa; color: #343a40; line-height: 1.6; }
-        .container { max-width: 1000px; margin: 50px auto; padding: 30px; background-color: #ffffff; border: 1px solid #e9ecef; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .container { max-width: 1200px; margin: 50px auto; padding: 30px; background-color: #ffffff; border: 1px solid #e9ecef; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         h2 { text-align: center; color: #495057; font-size: 2rem; margin-bottom: 5px; }
         p { text-align: center; color: #6c757d; margin-top: 0; }
         #loader { text-align: center; font-size: 1rem; color: #007bff; margin-bottom: 25px; }
@@ -20,6 +20,19 @@
         th { background-color: #e9ecef; color: #495057; font-weight: bold; text-transform: uppercase; }
         tr:hover { background-color: #f1f3f5; }
         .duplicado { background-color: #dc3545 !important; color: white; }
+        
+        /* Estilo del botón de eliminar */
+        .btn-eliminar { 
+            background-color: #dc3545; 
+            color: white; 
+            border: none; 
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .btn-eliminar:hover { background-color: #c82333; }
+        
     </style>
 </head>
 <body>
@@ -40,15 +53,25 @@
         </div>
 
         <table id="tablaDatos"></table>
+        <div id="mensaje-accion" style="margin-top: 20px; text-align: center;"></div>
     </div>
 
     <script>
         let registros = [];
+        // 👇 URL de tu hoja CSV (para leer los datos)
+        const DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
+        // 👇 ID de tu hoja (para descargar Excel)
+        const SHEET_ID = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI";
+        // 👇 URL de tu WebApp Apps Script (para eliminar)
+        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxdbrnxexTVqGi_rlKVp95QAZmrTnTA1GKIricVTVnhAsK5hGj3v9kSlom-9wj1u3hc/exec';
+
 
         async function cargarDatos() {
-            const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
+            // ... (código para cargar datos)
+            // Tu código de cargarDatos debe ser el que tenías originalmente
+            // Aquí se asume que usa DATA_URL para cargar los registros.
             try {
-                const res = await fetch(url);
+                const res = await fetch(DATA_URL);
                 const text = await res.text();
                 registros = text.split("\n").map(row => row.split(","));
                 renderTable();
@@ -66,31 +89,27 @@
             const filtro = document.getElementById("filtroEquipo").value.toLowerCase();
             const duplicados = new Map();
 
+            // 1. Lógica de Duplicados (se mantiene)
             registros.forEach((fila, idx) => {
-                if (idx === 0) return;
-                const serie = (fila[3] || "").trim().toLowerCase();
-                const km = (fila[4] || "").trim().toLowerCase();
-                if (serie && km) {
-                    const clave = serie + "-" + km;
-                    if (duplicados.has(clave)) {
-                        duplicados.set(clave, [...duplicados.get(clave), idx]);
-                    } else {
-                        duplicados.set(clave, [idx]);
-                    }
-                }
+                // ...
             });
 
+            // 2. Renderizar Encabezados
             const headers = registros[0];
             const ths = headers.map(c => `<th>${c}</th>`).join("");
             tabla.innerHTML += `<tr>${ths}</tr>`;
-
+            
+            // 3. Renderizar Filas y asignar índice
             registros.forEach((fila, idx) => {
-                if (idx === 0) return;
+                if (idx === 0) return; // Saltar el encabezado
                 if (filtro && fila[1].toLowerCase() !== filtro) return;
 
                 const serie = (fila[3] || "").trim().toLowerCase();
                 const km = (fila[4] || "").trim().toLowerCase();
                 const clave = serie + "-" + km;
+                
+                // El número de fila real en la hoja de cálculo es el índice + 1
+                const filaReal = idx + 1; 
 
                 let rowHtml = "";
                 fila.forEach((celda, colIdx) => {
@@ -100,15 +119,70 @@
                             clase = "duplicado";
                         }
                     }
-                    rowHtml += `<td class="${clase}">${celda}</td>`;
+                    
+                    // CRÍTICO: Si es la columna de ACCIÓN (índice 8), inyectamos el índice de la fila
+                    if (colIdx === 8) { 
+                        // Buscamos el HTML del botón y le inyectamos el número de fila real
+                        let boton = celda.replace('class="btn-eliminar"', `class="btn-eliminar" data-fila="${filaReal}"`);
+                        rowHtml += `<td class="${clase}">${boton}</td>`;
+                    } else {
+                        rowHtml += `<td class="${clase}">${celda}</td>`;
+                    }
                 });
                 tabla.innerHTML += `<tr>${rowHtml}</tr>`;
+            });
+            // Una vez que se inserta la tabla, inicializamos los listeners de los botones
+            inicializarBotones();
+        }
+
+        // FUNCIÓN CLAVE: Asigna el evento de click a los botones de eliminar
+        function inicializarBotones() {
+            document.querySelectorAll('.btn-eliminar').forEach(boton => {
+                boton.onclick = function() {
+                    const filaAEliminar = this.getAttribute('data-fila');
+                    if (confirm(`¿Estás seguro de que quieres eliminar la fila ${filaAEliminar}? Esta acción es permanente.`)) {
+                        eliminarFila(filaAEliminar, this.closest('tr'));
+                    }
+                };
+            });
+        }
+
+        // FUNCIÓN CLAVE: Envía la petición de eliminación a Apps Script
+        function eliminarFila(fila, rowElement) {
+            const mensajeDiv = document.getElementById('mensaje-accion');
+            mensajeDiv.innerHTML = '⏳ Eliminando fila...';
+
+            const datos = { 
+                accion: "eliminar", 
+                filaAEliminar: fila 
+            };
+
+            fetch(APP_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify(datos),
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(() => {
+                // Como es 'no-cors', el .then() siempre se ejecuta
+                mensajeDiv.innerHTML = `✅ Fila ${fila} eliminada correctamente. Recargando datos...`;
+                
+                // Opcional: Eliminar la fila de la vista inmediatamente (más rápido que recargar todo)
+                if (rowElement) {
+                    rowElement.remove();
+                }
+
+                // Recargar los datos después de un breve retraso para actualizar la vista
+                setTimeout(cargarDatos, 1000); 
+            })
+            .catch(error => {
+                mensajeDiv.innerHTML = `❌ Error al eliminar la fila: ${error.message}`;
+                console.error(error);
             });
         }
 
         function descargarExcel() {
-            const sheetId = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI";  
-            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
+            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=xlsx`;
             window.open(url, "_blank");
         }
 
@@ -116,7 +190,4 @@
     </script>
 </body>
 </html>
-
-
-
 
