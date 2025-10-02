@@ -5,76 +5,178 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Registro de Equipo</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
+    /* --- ESTILOS BASE Y RESPONSIVE --- */
+    body { 
+        font-family: Arial, sans-serif; 
+        margin: 0; 
+        padding: 0;
+        background-color: #f8f8f8; /* Fondo suave */
+    }
+    
+    .form-container {
+        max-width: 600px; /* Contenedor central para pantallas grandes */
+        margin: 20px auto;
+        padding: 15px;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
     header {
-      display: flex; align-items: center; justify-content: center;
-      flex-wrap: wrap; background-color: #f5f5f5; padding: 10px 20px;
-      margin-bottom: 20px; border-radius: 6px;
+      display: flex; 
+      align-items: center; 
+      justify-content: center;
+      flex-wrap: wrap; 
+      background-color: #e3f2fd; /* Color más visible */
+      padding: 15px;
+      margin-bottom: 20px; 
+      border-radius: 6px;
     }
-    .logo { max-width: 150px; height: auto; margin-right: 15px; }
-    h2 { margin: 0; text-align: center; }
-    label { display: block; margin-top: 10px; }
-    input, select {
-      width: 100%; max-width: 400px; padding: 8px; margin-top: 5px; box-sizing: border-box;
-    }
+    
+    .logo { 
+        max-width: 100px; /* Logotipo más pequeño para móvil */
+        height: auto; 
+        margin-right: 15px; 
+    }
+    
+    h2 { 
+        margin: 0; 
+        text-align: center; 
+        font-size: 1.5em; 
+    }
+    
+    /* --- ESTILOS DE FORMULARIO --- */
+    label { 
+        display: block; 
+        margin-top: 15px; /* Más espacio entre campos */
+        font-weight: bold;
+        color: #333;
+    }
+    
+    input, select {
+        width: 100%; 
+        padding: 10px; 
+        margin-top: 5px; 
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 1em;
+    }
+    
+    /* Eliminar el max-width de 400px en inputs/selects para que ocupen todo el ancho del contenedor */
+    
     button {
-      margin-top: 20px; padding: 10px 20px; font-size: 16px;
-      cursor: pointer; width: 100%; max-width: 200px;
+      margin-top: 25px; 
+      padding: 12px 20px; 
+      font-size: 1em;
+      cursor: pointer; 
+      width: 100%; 
+      max-width: 250px; /* Botón centrado y ancho limitado */
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      transition: background-color 0.3s;
     }
-    #mensaje { margin-top: 20px; font-weight: bold; }
+
+    button:hover {
+        background-color: #0056b3;
+    }
+
+    /* --- ESTILOS DE MENSAJE Y MODAL --- */
+    #mensaje { 
+        margin-top: 20px; 
+        font-weight: bold; 
+        text-align: center;
+    }
+    
     #modalCargando {
-      display: none; position: fixed; z-index: 999; left: 0; top: 0;
-      width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);
+      display: none; 
+      position: fixed; 
+      z-index: 999; 
+      left: 0; 
+      top: 0;
+      width: 100%; 
+      height: 100%; 
+      background-color: rgba(0,0,0,0.6);
     }
+    
     #modalContenido {
-      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      background: white; padding: 30px; border-radius: 8px; text-align: center;
-      font-size: 18px; box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      position: absolute; 
+      top: 50%; 
+      left: 50%; 
+      transform: translate(-50%, -50%);
+      background: white; 
+      padding: 40px; 
+      border-radius: 8px; 
+      text-align: center;
+      font-size: 18px; 
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
     }
+
+    /* Media query para pantallas más pequeñas (móviles) */
+    @media (max-width: 600px) {
+        .form-container {
+            margin: 10px;
+            padding: 10px;
+        }
+        h2 {
+            font-size: 1.2em;
+        }
+        .logo {
+            max-width: 80px;
+        }
+    }
   </style>
 </head>
 <body>
-  <header>
-    <img src="logolief.jpg" alt="Logo LIEF" class="logo">
-    <h2>Formulario de Registro</h2>
-  </header>
+    <div class="form-container">
+        <header>
+            <img src="logolief.jpg" alt="Logo LIEF" class="logo">
+            <h2>Formulario de Registro</h2>
+        </header>
 
-  <label for="fecha">Fecha:</label>
-  <input type="date" id="fecha" required>
+        <label for="fecha">Fecha:</label>
+        <input type="date" id="fecha" required>
 
-  <label for="equipo">Equipo:</label>
-  <select id="equipo" onchange="actualizarCampoMedida()" required>
-    <option value="">-- Selecciona --</option>
-    <option value="Vehículo">Vehículo</option>
-    <option value="Maquinaria">Maquinaria</option>
-  </select>
+        <label for="equipo">Equipo:</label>
+        <select id="equipo" onchange="actualizarCampoMedida()" required>
+            <option value="">-- Selecciona --</option>
+            <option value="Vehículo">Vehículo</option>
+            <option value="Maquinaria">Maquinaria</option>
+        </select>
 
-  <label for="frente">Frente:</label>
-  <input type="text" id="frente" required >
+        <label for="frente">Frente:</label>
+        <input type="text" id="frente" required >
 
-  <label for="serie">Número de Serie:</label>
-  <input type="text" id="serie" required>
+        <label for="serie">Número de Serie:</label>
+        <input type="text" id="serie" required>
 
-  <div id="campoMedidaContainer"></div>
+        <div id="campoMedidaContainer"></div>
 
-  <label for="trabajador">Trabajador:</label>
-  <input type="text" id="trabajador" required>
+        <label for="trabajador">Trabajador:</label>
+        <input type="text" id="trabajador" required>
 
-  <label for="estado">Estado del equipo:</label>
-  <select id="estado" required>
-    <option value="">-- Selecciona --</option>
-    <option value="Operativo">Operativo</option>
-    <option value="No Operativo">No Operativo</option>
-  </select>
+        <label for="estado">Estado del equipo:</label>
+        <select id="estado" required>
+            <option value="">-- Selecciona --</option>
+            <option value="Operativo">Operativo</option>
+            <option value="No Operativo">No Operativo</option>
+        </select>
 
-  <button onclick="enviarDatos()">Enviar</button>
-  <div id="mensaje"></div>
+        <button onclick="enviarDatos()">Enviar</button>
+        <div id="mensaje"></div>
+    </div>
 
   <div id="modalCargando">
     <div id="modalContenido">⏳ Enviando datos, por favor espera...</div>
   </div>
 
   <script>
+    // Tu función actualizarCampoMedida se mantiene sin cambios
     function actualizarCampoMedida() {
       const equipo = document.getElementById('equipo').value;
       const container = document.getElementById('campoMedidaContainer');
@@ -93,8 +195,8 @@
       }
     }
 
+    // Tu función enviarDatos no envía el timestamp, lo cual es correcto
     function enviarDatos() {
-      // SOLO SE DEFINEN LAS 8 VARIABLES NECESARIAS
       const fecha      = document.getElementById('fecha').value;
       const equipo     = document.getElementById('equipo').value;
       const frente     = document.getElementById('frente').value;
@@ -118,8 +220,8 @@
       modal.style.display = 'block';
       document.getElementById('mensaje').innerText = '';
 
-      // 👇 EL OBJETO SÓLO CONTIENE LAS 8 VARIABLES. NINGÚN TIMESTAMP.
-      const datos = { fecha, equipo, frente, serie, km, hrs, trabajador, estado };
+      // EL OBJETO SÓLO CONTIENE LOS 8 CAMPOS DE DATOS DEL FORMULARIO
+      const datos = { fecha, equipo, frente, serie, km, hrs, trabajador, estado }; 
 
       // 👇 Aquí va el URL del WebApp (NO el de la hoja publicada)
       fetch('https://script.google.com/macros/s/AKfycbxdbrnxexTVqGi_rlKVp95QAZmrTnTA1GKIricVTVnhAsK5hGj3v9kSlom-9wj1u3hc/exec', {
@@ -159,6 +261,5 @@
   </script>
 </body>
 </html>
-
 
 
