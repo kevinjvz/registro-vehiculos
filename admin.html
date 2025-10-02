@@ -58,21 +58,18 @@
 
     <script>
         let registros = [];
-        // 👇 URL de tu hoja CSV (para leer los datos)
+        // 👇👇 VERIFICA Y AJUSTA TUS URLs y ID 👇👇
         const DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
-        // 👇 ID de tu hoja (para descargar Excel)
         const SHEET_ID = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI";
-        // 👇 URL de tu WebApp Apps Script (para eliminar)
         const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxdbrnxexTVqGi_rlKVp95QAZmrTnTA1GKIricVTVnhAsK5hGj3v9kSlom-9wj1u3hc/exec';
+        // 👆👆 VERIFICA Y AJUSTA TUS URLs y ID 👆👆
 
 
         async function cargarDatos() {
-            // ... (código para cargar datos)
-            // Tu código de cargarDatos debe ser el que tenías originalmente
-            // Aquí se asume que usa DATA_URL para cargar los registros.
             try {
                 const res = await fetch(DATA_URL);
                 const text = await res.text();
+                // Importante: Si la hoja tiene 9 columnas (A-I), el CSV también tendrá 9
                 registros = text.split("\n").map(row => row.split(","));
                 renderTable();
             } catch (error) {
@@ -91,24 +88,34 @@
 
             // 1. Lógica de Duplicados (se mantiene)
             registros.forEach((fila, idx) => {
-                // ...
+                if (idx === 0) return;
+                const serie = (fila[3] || "").trim().toLowerCase();
+                const km = (fila[4] || "").trim().toLowerCase();
+                if (serie && km) {
+                    const clave = serie + "-" + km;
+                    if (duplicados.has(clave)) {
+                        duplicados.set(clave, [...duplicados.get(clave), idx]);
+                    } else {
+                        duplicados.set(clave, [idx]);
+                    }
+                }
             });
 
             // 2. Renderizar Encabezados
             const headers = registros[0];
             const ths = headers.map(c => `<th>${c}</th>`).join("");
             tabla.innerHTML += `<tr>${ths}</tr>`;
-            
-            // 3. Renderizar Filas y asignar índice
+
+            // 3. Renderizar Filas e inyectar HTML y datos de la fila
             registros.forEach((fila, idx) => {
-                if (idx === 0) return; // Saltar el encabezado
+                if (idx === 0) return; 
                 if (filtro && fila[1].toLowerCase() !== filtro) return;
 
                 const serie = (fila[3] || "").trim().toLowerCase();
                 const km = (fila[4] || "").trim().toLowerCase();
                 const clave = serie + "-" + km;
                 
-                // El número de fila real en la hoja de cálculo es el índice + 1
+                // El número de fila real en la hoja de cálculo es el índice del array + 1
                 const filaReal = idx + 1; 
 
                 let rowHtml = "";
@@ -120,27 +127,30 @@
                         }
                     }
                     
-                    // CRÍTICO: Si es la columna de ACCIÓN (índice 8), inyectamos el índice de la fila
+                    // Columna de ACCIÓN es el índice 8
                     if (colIdx === 8) { 
-                        // Buscamos el HTML del botón y le inyectamos el número de fila real
-                        let boton = celda.replace('class="btn-eliminar"', `class="btn-eliminar" data-fila="${filaReal}"`);
-                        rowHtml += `<td class="${clase}">${boton}</td>`;
+                         // Inyectamos el número de fila real en el atributo data-fila del botón
+                         let boton = celda.replace('class="btn-eliminar"', `class="btn-eliminar" data-fila="${filaReal}"`);
+                         rowHtml += `<td class="${clase}">${boton}</td>`;
                     } else {
-                        rowHtml += `<td class="${clase}">${celda}</td>`;
+                         rowHtml += `<td class="${clase}">${celda}</td>`;
                     }
                 });
                 tabla.innerHTML += `<tr>${rowHtml}</tr>`;
             });
-            // Una vez que se inserta la tabla, inicializamos los listeners de los botones
+            
+            // 4. Asignar los eventos de click a los botones después de que se cargue el HTML
             inicializarBotones();
         }
 
         // FUNCIÓN CLAVE: Asigna el evento de click a los botones de eliminar
         function inicializarBotones() {
+            // Buscamos todos los botones que se acaban de inyectar en la tabla
             document.querySelectorAll('.btn-eliminar').forEach(boton => {
                 boton.onclick = function() {
                     const filaAEliminar = this.getAttribute('data-fila');
                     if (confirm(`¿Estás seguro de que quieres eliminar la fila ${filaAEliminar}? Esta acción es permanente.`)) {
+                        // Enviamos la fila a eliminar y el elemento <tr> para eliminarlo de la vista
                         eliminarFila(filaAEliminar, this.closest('tr'));
                     }
                 };
@@ -164,15 +174,15 @@
                 headers: { 'Content-Type': 'application/json' }
             })
             .then(() => {
-                // Como es 'no-cors', el .then() siempre se ejecuta
+                // Notificamos al usuario y actualizamos la tabla
                 mensajeDiv.innerHTML = `✅ Fila ${fila} eliminada correctamente. Recargando datos...`;
                 
-                // Opcional: Eliminar la fila de la vista inmediatamente (más rápido que recargar todo)
+                // Eliminamos la fila de la vista
                 if (rowElement) {
                     rowElement.remove();
                 }
 
-                // Recargar los datos después de un breve retraso para actualizar la vista
+                // Recargamos los datos desde la fuente
                 setTimeout(cargarDatos, 1000); 
             })
             .catch(error => {
@@ -190,4 +200,3 @@
     </script>
 </body>
 </html>
-
