@@ -1,265 +1,160 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Registro de Equipo</title>
-  <style>
-    /* --- ESTILOS BASE Y RESPONSIVE --- */
-    body { 
-        font-family: Arial, sans-serif; 
-        margin: 0; 
-        padding: 0;
-        background-color: #f8f8f8; /* Fondo suave */
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro de Equipo</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    header {
+      display: flex; align-items: center; justify-content: center;
+      flex-wrap: wrap; background-color: #f5f5f5; padding: 10px 20px;
+      margin-bottom: 20px; border-radius: 6px;
     }
-    
-    .form-container {
-        max-width: 600px; /* Contenedor central para pantallas grandes */
-        margin: 20px auto;
-        padding: 15px;
-        background-color: white;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    header {
-      display: flex; 
-      align-items: center; 
-      justify-content: center;
-      flex-wrap: wrap; 
-      background-color: #e3f2fd; /* Color más visible */
-      padding: 15px;
-      margin-bottom: 20px; 
-      border-radius: 6px;
-    }
-    
-    .logo { 
-        max-width: 100px; /* Logotipo más pequeño para móvil */
-        height: auto; 
-        margin-right: 15px; 
-    }
-    
-    h2 { 
-        margin: 0; 
-        text-align: center; 
-        font-size: 1.5em; 
-    }
-    
-    /* --- ESTILOS DE FORMULARIO --- */
-    label { 
-        display: block; 
-        margin-top: 15px; /* Más espacio entre campos */
-        font-weight: bold;
-        color: #333;
-    }
-    
+    .logo { max-width: 150px; height: auto; margin-right: 15px; }
+    h2 { margin: 0; text-align: center; }
+    label { display: block; margin-top: 10px; }
     input, select {
-        width: 100%; 
-        padding: 10px; 
-        margin-top: 5px; 
-        box-sizing: border-box;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        font-size: 1em;
+      width: 100%; max-width: 400px; padding: 8px; margin-top: 5px; box-sizing: border-box;
     }
-    
-    /* Eliminar el max-width de 400px en inputs/selects para que ocupen todo el ancho del contenedor */
-    
-    button {
-      margin-top: 25px; 
-      padding: 12px 20px; 
-      font-size: 1em;
-      cursor: pointer; 
-      width: 100%; 
-      max-width: 250px; /* Botón centrado y ancho limitado */
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      transition: background-color 0.3s;
-    }
-
-    button:hover {
-        background-color: #0056b3;
+    button {
+      margin-top: 20px; padding: 10px 20px; font-size: 16px;
+      cursor: pointer; width: 100%; max-width: 200px;
     }
-
-    /* --- ESTILOS DE MENSAJE Y MODAL --- */
-    #mensaje { 
-        margin-top: 20px; 
-        font-weight: bold; 
-        text-align: center;
+    #mensaje { margin-top: 20px; font-weight: bold; }
+    #modalCargando {
+      display: none; position: fixed; z-index: 999; left: 0; top: 0;
+      width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);
     }
-    
-    #modalCargando {
-      display: none; 
-      position: fixed; 
-      z-index: 999; 
-      left: 0; 
-      top: 0;
-      width: 100%; 
-      height: 100%; 
-      background-color: rgba(0,0,0,0.6);
-    }
-    
-    #modalContenido {
-      position: absolute; 
-      top: 50%; 
-      left: 50%; 
-      transform: translate(-50%, -50%);
-      background: white; 
-      padding: 40px; 
-      border-radius: 8px; 
-      text-align: center;
-      font-size: 18px; 
-      box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    }
-
-    /* Media query para pantallas más pequeñas (móviles) */
-    @media (max-width: 600px) {
-        .form-container {
-            margin: 10px;
-            padding: 10px;
-        }
-        h2 {
-            font-size: 1.2em;
-        }
-        .logo {
-            max-width: 80px;
-        }
+    #modalContenido {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: white; padding: 30px; border-radius: 8px; text-align: center;
+      font-size: 18px; box-shadow: 0 0 10px rgba(0,0,0,0.3);
     }
-  </style>
+  </style>
 </head>
 <body>
-    <div class="form-container">
-        <header>
-            <img src="logolief.jpg" alt="Logo LIEF" class="logo">
-            <h2>Formulario de Registro</h2>
-        </header>
+  <header>
+    <img src="logolief.jpg" alt="Logo LIEF" class="logo">
+    <h2>Formulario de Registro</h2>
+  </header>
 
-        <label for="fecha">Fecha:</label>
-        <input type="date" id="fecha" required>
+  <label for="fecha">Fecha:</label>
+  <input type="date" id="fecha" required>
 
-        <label for="equipo">Equipo:</label>
-        <select id="equipo" onchange="actualizarCampoMedida()" required>
-            <option value="">-- Selecciona --</option>
-            <option value="Vehículo">Vehículo</option>
-            <option value="Maquinaria">Maquinaria</option>
-        </select>
+  <label for="equipo">Equipo:</label>
+  <select id="equipo" onchange="actualizarCampoMedida()" required>
+    <option value="">-- Selecciona --</option>
+    <option value="Vehículo">Vehículo</option>
+    <option value="Maquinaria">Maquinaria</option>
+  </select>
 
-        <label for="frente">Frente:</label>
-        <input type="text" id="frente" required >
+  <label for="frente">Frente:</label>
+  <input type="text" id="frente" required >
 
-        <label for="serie">Número de Serie:</label>
-        <input type="text" id="serie" required>
+  <label for="serie">Número de Serie:</label>
+  <input type="text" id="serie" required>
 
-        <div id="campoMedidaContainer"></div>
+  <div id="campoMedidaContainer"></div>
 
-        <label for="trabajador">Trabajador:</label>
-        <input type="text" id="trabajador" required>
+  <label for="trabajador">Trabajador:</label>
+  <input type="text" id="trabajador" required>
 
-        <label for="estado">Estado del equipo:</label>
-        <select id="estado" required>
-            <option value="">-- Selecciona --</option>
-            <option value="Operativo">Operativo</option>
-            <option value="No Operativo">No Operativo</option>
-        </select>
+  <label for="estado">Estado del equipo:</label>
+  <select id="estado" required>
+    <option value="">-- Selecciona --</option>
+    <option value="Operativo">Operativo</option>
+    <option value="No Operativo">No Operativo</option>
+  </select>
 
-        <button onclick="enviarDatos()">Enviar</button>
-        <div id="mensaje"></div>
-    </div>
+  <button onclick="enviarDatos()">Enviar</button>
+  <div id="mensaje"></div>
 
-  <div id="modalCargando">
-    <div id="modalContenido">⏳ Enviando datos, por favor espera...</div>
-  </div>
+  <div id="modalCargando">
+    <div id="modalContenido">⏳ Enviando datos, por favor espera...</div>
+  </div>
 
-  <script>
-    // Tu función actualizarCampoMedida se mantiene sin cambios
-    function actualizarCampoMedida() {
-      const equipo = document.getElementById('equipo').value;
-      const container = document.getElementById('campoMedidaContainer');
-      container.innerHTML = '';
+  <script>
+    function actualizarCampoMedida() {
+      const equipo = document.getElementById('equipo').value;
+      const container = document.getElementById('campoMedidaContainer');
+      container.innerHTML = '';
 
-      if (equipo === 'Vehículo') {
-        container.innerHTML = `
-          <label for="km">KM:</label>
-          <input type="number" id="km" required min="0" step="1">
-        `;
-      } else if (equipo === 'Maquinaria') {
-        container.innerHTML = `
-          <label for="hrs">HRS:</label>
-          <input type="number" id="hrs" required min="0" step="0.1">
-        `;
-      }
-    }
+      if (equipo === 'Vehículo') {
+        container.innerHTML = `
+          <label for="km">KM:</label>
+          <input type="number" id="km" required min="0" step="1">
+        `;
+      } else if (equipo === 'Maquinaria') {
+        container.innerHTML = `
+          <label for="hrs">HRS:</label>
+          <input type="number" id="hrs" required min="0" step="0.1">
+        `;
+      }
+    }
 
-    // Tu función enviarDatos no envía el timestamp, lo cual es correcto
-    function enviarDatos() {
-      const fecha      = document.getElementById('fecha').value;
-      const equipo     = document.getElementById('equipo').value;
-      const frente     = document.getElementById('frente').value;
-      const serie      = document.getElementById('serie').value;
-      const trabajador = document.getElementById('trabajador').value;
-      const estado     = document.getElementById('estado').value;
+    function enviarDatos() {
+      const fecha      = document.getElementById('fecha').value;
+      const equipo     = document.getElementById('equipo').value;
+      const frente     = document.getElementById('frente').value;
+      const serie      = document.getElementById('serie').value;
+      const trabajador = document.getElementById('trabajador').value;
+      const estado     = document.getElementById('estado').value;
 
-      let km = "", hrs = "";
-      if (equipo === "Vehículo") {
-        km = document.getElementById('km')?.value || "";
-      } else if (equipo === "Maquinaria") {
-        hrs = document.getElementById('hrs')?.value || "";
-      }
+      let km = "", hrs = "";
+      if (equipo === "Vehículo") {
+        km = document.getElementById('km')?.value || "";
+      } else if (equipo === "Maquinaria") {
+        hrs = document.getElementById('hrs')?.value || "";
+      }
 
-      if (!fecha || !equipo || !frente || !serie || !trabajador || !estado || (!km && !hrs)) {
-        mostrarMensaje("❌ Todos los campos son obligatorios", "red");
-        return;
-      }
+      if (!fecha || !equipo || !frente || !serie || !trabajador || !estado || (!km && !hrs)) {
+        mostrarMensaje("❌ Todos los campos son obligatorios", "red");
+        return;
+      }
 
-      const modal = document.getElementById('modalCargando');
-      modal.style.display = 'block';
-      document.getElementById('mensaje').innerText = '';
+      const modal = document.getElementById('modalCargando');
+      modal.style.display = 'block';
+      document.getElementById('mensaje').innerText = '';
 
-      // EL OBJETO SÓLO CONTIENE LOS 8 CAMPOS DE DATOS DEL FORMULARIO
-      const datos = { fecha, equipo, frente, serie, km, hrs, trabajador, estado }; 
+      const datos = { fecha, equipo, frente, serie, km, hrs, trabajador, estado };
 
-      // 👇 Aquí va el URL del WebApp (NO el de la hoja publicada)
-      fetch('https://script.google.com/macros/s/AKfycbxdbrnxexTVqGi_rlKVp95QAZmrTnTA1GKIricVTVnhAsK5hGj3v9kSlom-9wj1u3hc/exec', {
-        method: 'POST',
-        mode: 'no-cors',
-        body: JSON.stringify(datos),
-        headers: { 'Content-Type': 'application/json' }
-      })
-      .then(() => {
-        mostrarMensaje("✅ Registro enviado correctamente", "green");
-        limpiarFormulario();
-      })
-      .catch(error => {
-        mostrarMensaje("❌ Error de conexión: " + error.message, "red");
-        console.error(error);
-      })
-      .finally(() => {
-        modal.style.display = 'none';
-      });
-    }
+      // 👇 Aquí va el URL del WebApp (NO el de la hoja publicada)
+      fetch('https://script.google.com/macros/s/AKfycbxdbrnxexTVqGi_rlKVp95QAZmrTnTA1GKIricVTVnhAsK5hGj3v9kSlom-9wj1u3hc/exec', {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify(datos),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(() => {
+        mostrarMensaje("✅ Registro enviado correctamente", "green");
+        limpiarFormulario();
+      })
+      .catch(error => {
+        mostrarMensaje("❌ Error de conexión: " + error.message, "red");
+        console.error(error);
+      })
+      .finally(() => {
+        modal.style.display = 'none';
+      });
+    }
 
-    function mostrarMensaje(texto, color) {
-      const mensaje = document.getElementById("mensaje");
-      mensaje.innerText = texto;
-      mensaje.style.color = color;
-    }
+    function mostrarMensaje(texto, color) {
+      const mensaje = document.getElementById("mensaje");
+      mensaje.innerText = texto;
+      mensaje.style.color = color;
+    }
 
-    function limpiarFormulario() {
-      document.getElementById('fecha').value = "";
-      document.getElementById('equipo').value = "";
-      document.getElementById('frente').value = "";
-      document.getElementById('serie').value = "";
-      document.getElementById('trabajador').value = "";
-      document.getElementById('estado').value = "";
-      document.getElementById('campoMedidaContainer').innerHTML = "";
-    }
-  </script>
+    function limpiarFormulario() {
+      document.getElementById('fecha').value = "";
+      document.getElementById('equipo').value = "";
+      document.getElementById('frente').value = "";
+      document.getElementById('serie').value = "";
+      document.getElementById('trabajador').value = "";
+      document.getElementById('estado').value = "";
+      document.getElementById('campoMedidaContainer').innerHTML = "";
+    }
+  </script>
 </body>
 </html>
-
 
