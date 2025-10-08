@@ -1,237 +1,122 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Panel de Administración</title>
-    <style>
-        body { font-family: 'Georgia', serif; margin: 0; background-color: #f8f9fa; color: #343a40; line-height: 1.6; }
-        .container { max-width: 1000px; margin: 50px auto; padding: 30px; background-color: #ffffff; border: 1px solid #e9ecef; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        h2 { text-align: center; color: #495057; font-size: 2rem; margin-bottom: 5px; }
-        p { text-align: center; color: #6c757d; margin-top: 0; }
-        #loader { text-align: center; font-size: 1rem; color: #007bff; margin-bottom: 25px; }
-        .toolbar { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #e9ecef; margin-bottom: 25px; flex-wrap: wrap; gap: 10px; }
-        .toolbar label { font-weight: 600; color: #495057; }
-        .toolbar select, .toolbar button { padding: 10px 15px; border: 1px solid #ced4da; border-radius: 4px; font-size: 0.9rem; cursor: pointer; transition: all 0.2s ease-in-out; }
-        .toolbar select { background-color: #ffffff; }
-        .toolbar button { background-color: #28a745; color: white; border: none; }
-        .toolbar button:hover { background-color: #218838; }
-        table { width: 100%; border-collapse: collapse; margin-top: 25px; font-size: 0.9rem; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #dee2e6; }
-        th { background-color: #e9ecef; color: #495057; font-weight: bold; text-transform: uppercase; }
-        tr:hover { background-color: #f1f3f5; }
-        .duplicado { background-color: #dc3545 !important; color: white; }
-        .alerta-mantenimiento { background-color: #dc3545 !important; color: white; font-weight: bold; }
-    </style>
+    <meta charset="UTF-8">
+    <title>Panel de Administración</title>
+    <style>
+        body { font-family: 'Georgia', serif; margin: 0; background-color: #f8f9fa; color: #343a40; line-height: 1.6; }
+        .container { max-width: 1000px; margin: 50px auto; padding: 30px; background-color: #ffffff; border: 1px solid #e9ecef; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        h2 { text-align: center; color: #495057; font-size: 2rem; margin-bottom: 5px; }
+        p { text-align: center; color: #6c757d; margin-top: 0; }
+        #loader { text-align: center; font-size: 1rem; color: #007bff; margin-bottom: 25px; }
+        .toolbar { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #e9ecef; margin-bottom: 25px; flex-wrap: wrap; gap: 10px; }
+        .toolbar label { font-weight: 600; color: #495057; }
+        .toolbar select, .toolbar button { padding: 10px 15px; border: 1px solid #ced4da; border-radius: 4px; font-size: 0.9rem; cursor: pointer; transition: all 0.2s ease-in-out; }
+        .toolbar select { background-color: #ffffff; }
+        .toolbar button { background-color: #28a745; color: white; border: none; }
+        .toolbar button:hover { background-color: #218838; }
+        table { width: 100%; border-collapse: collapse; margin-top: 25px; font-size: 0.9rem; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #dee2e6; }
+        th { background-color: #e9ecef; color: #495057; font-weight: bold; text-transform: uppercase; }
+        tr:hover { background-color: #f1f3f5; }
+        .duplicado { background-color: #dc3545 !important; color: white; }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Panel de Administración</h2>
-        <p>Visualiza y filtra los registros directamente:</p>
+    <div class="container">
+        <h2>Panel de Administración</h2>
+        <p>Visualiza y filtra los registros directamente:</p>
 
-        <div id="loader">⏳ Cargando registros...</div>
+        <div id="loader">⏳ Cargando registros...</div>
 
-        <div class="toolbar">
-            <label>Filtro por Equipo:</label>
-            <select id="filtroEquipo" onchange="renderTable()">
-                <option value="">Todos</option>
-                <option value="Vehículo">Vehículo</option>
-                <option value="Maquinaria">Maquinaria</option>
-            </select>
-            <button onclick="descargarExcel()">📥 Exportar a Excel</button>
-        </div>
+        <div class="toolbar">
+            <label>Filtro por Equipo:</label>
+            <select id="filtroEquipo" onchange="renderTable()">
+                <option value="">Todos</option>
+                <option value="Vehículo">Vehículo</option>
+                <option value="Maquinaria">Maquinaria</option>
+            </select>
+            <button onclick="descargarExcel()">📥 Exportar a Excel</button>
+        </div>
 
-        <table id="tablaDatos"></table>
-    </div>
+        <table id="tablaDatos"></table>
+    </div>
 
-    <script>
-        let registros = [];
-        const UMBRAL_ALERTA_KM = 5000;
-        let historialMantenimiento = {}; 
+    <script>
+        let registros = [];
 
-        // 🚨 LISTA DE REFERENCIA: KM Base de Mantenimiento por N.ECO 🚨
-        // Estos valores serán el punto de partida para la resta del KM recorrido
-        const KM_BASE_MAINTENANCE = {
-            "EQ-02": 165447,
-            "EQ-32": 88866,
-            "ET-67": 233344,
-            "LL0023": 275553,
-            "ET-57": 230826,
-            "EQ-16": 99727,
-            "ET-73": 272292,
-            "ET-54": 236734,
-            "ET-74": 261090,
-            "EQ-17": 140681,
-            "EQ-51": 26945,
-            "EQ-55": 18866,
-            "EA-49": 144210,
-            "ECO-138": 139433,
-            "ET-53": 286004,
-            "EQ-23": 55352,
-            "ET-55": 374301,
-            "ET-66": 259651,
-            "ET-36": 309436,
-            "EQ-29": 116571,
-            "ET-07": 56475,
-            "EQ-38": 106242,
-            "ET-64": 220211,
-            "LL0002": 87137,
-            "EA-44": 45211,
-            // Nota: Se usará el último valor que proporcionaste para EQ-14, que es 4140
-            "EQ-14": 4140, 
-            "ET-01": 348730,
-            "LL003": 277051,
-            "EA-23": 595214
-        };
+        async function cargarDatos() {
+            const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
+            try {
+                const res = await fetch(url);
+                const text = await res.text();
+                registros = text.split("\n").map(row => row.split(","));
+                renderTable();
+            } catch (error) {
+                console.error("Error al cargar los datos:", error);
+                document.getElementById("loader").innerText = "❌ Error al cargar los datos.";
+            } finally {
+                document.getElementById("loader").style.display = "none";
+            }
+        }
 
-        async function cargarDatos() {
-            const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
-            try {
-                const res = await fetch(url);
-                const text = await res.text();
-                
-                const rows = text.split("\n");
-                registros = rows.map(row => row.split(","));
-                
-                // Primero se calcula la base de mantenimiento
-                calcularMantenimiento();
-                renderTable();
+        function renderTable() {
+            const tabla = document.getElementById("tablaDatos");
+            tabla.innerHTML = "";
+            const filtro = document.getElementById("filtroEquipo").value.toLowerCase();
+            const duplicados = new Map();
 
-            } catch (error) {
-                console.error("Error al cargar los datos:", error);
-                document.getElementById("loader").innerText = "❌ Error al cargar los datos.";
-            } finally {
-                document.getElementById("loader").style.display = "none";
-            }
-        }
-
-        function calcularMantenimiento() {
-            // Inicializa el Map de rastreo que almacena el KM de referencia
-            const ultimoKm = new Map(); 
-
-            // 1. Cargar los valores de Mantenimiento Base proporcionados por el usuario
-            Object.entries(KM_BASE_MAINTENANCE).forEach(([serie, km]) => {
-                ultimoKm.set(serie.toUpperCase(), km);
+            registros.forEach((fila, idx) => {
+                if (idx === 0) return;
+                const serie = (fila[3] || "").trim().toLowerCase();
+                const km = (fila[4] || "").trim().toLowerCase();
+                if (serie && km) {
+                    const clave = serie + "-" + km;
+                    if (duplicados.has(clave)) {
+                        duplicados.set(clave, [...duplicados.get(clave), idx]);
+                    } else {
+                        duplicados.set(clave, [idx]);
+                    }
+                }
             });
 
-            // 2. Procesar los registros históricos
-            registros.forEach((fila, idx) => {
-                if (idx === 0) return; 
-                
-                const equipo = (fila[1] || "").trim();
-                const serie = (fila[3] || "").trim().toUpperCase(); 
-                const kmActualStr = (fila[4] || "").trim(); 
-                const kmActual = parseFloat(kmActualStr);
+            const headers = registros[0];
+            const ths = headers.map(c => `<th>${c}</th>`).join("");
+            tabla.innerHTML += `<tr>${ths}</tr>`;
 
-                if (equipo === 'Vehículo' && serie && !isNaN(kmActual) && kmActual > 0) {
-                    // Obtiene el KM de referencia (será el de la lista base O el del registro anterior)
-                    const kmAnterior = ultimoKm.get(serie) || 0;
-                    
-                    // Solo calculamos si el KM actual es mayor que el KM de referencia
-                    if (kmActual >= kmAnterior) {
-                        const kmRecorridos = kmActual - kmAnterior;
-                    
-                        historialMantenimiento[idx] = {
-                            kmAnterior: kmAnterior,
-                            kmRecorridos: kmRecorridos,
-                            alerta: kmRecorridos > UMBRAL_ALERTA_KM
-                        };
-                    
-                        // Actualiza el Map con el KM actual para el siguiente cálculo de este N.ECO
-                        ultimoKm.set(serie, kmActual);
-                    } else {
-                        // El KM actual es menor que el de referencia (ej. error de captura o registro antiguo)
-                        historialMantenimiento[idx] = { kmRecorridos: 0, alerta: false };
+            registros.forEach((fila, idx) => {
+                if (idx === 0) return;
+                if (filtro && fila[1].toLowerCase() !== filtro) return;
+
+                const serie = (fila[3] || "").trim().toLowerCase();
+                const km = (fila[4] || "").trim().toLowerCase();
+                const clave = serie + "-" + km;
+
+                let rowHtml = "";
+                fila.forEach((celda, colIdx) => {
+                    let clase = "";
+                    if (duplicados.has(clave) && duplicados.get(clave).length > 1) {
+                        if (colIdx === 3 || colIdx === 4) {
+                            clase = "duplicado";
+                        }
                     }
-                } else {
-                    historialMantenimiento[idx] = { kmRecorridos: null, alerta: false };
-                }
-            });
-        }
+                    rowHtml += `<td class="${clase}">${celda}</td>`;
+                });
+                tabla.innerHTML += `<tr>${rowHtml}</tr>`;
+            });
+        }
 
-        function renderTable() {
-            const tabla = document.getElementById("tablaDatos");
-            tabla.innerHTML = "";
-            const filtro = document.getElementById("filtroEquipo").value.toLowerCase();
-            const duplicados = new Map();
+        function descargarExcel() {
+            const sheetId = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI";  
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
+            window.open(url, "_blank");
+        }
 
-            // Lógica original de Detección de Duplicados (se mantiene)
-            registros.forEach((fila, idx) => {
-                if (idx === 0) return;
-                const serie = (fila[3] || "").trim().toLowerCase();
-                const km = (fila[4] || "").trim().toLowerCase();
-                if (serie && km) {
-                    const clave = serie + "-" + km;
-                    duplicados.set(clave, (duplicados.get(clave) || []).concat(idx));
-                }
-            });
-
-            // 1. Cabecera con la nueva columna de cálculo
-            let headers = registros[0].slice(); 
-            headers.push("KM Recorridos desde Último Mantenimiento"); // Nueva etiqueta
-            const ths = headers.map(c => `<th>${c.trim()}</th>`).join("");
-            tabla.innerHTML += `<tr>${ths}</tr>`;
-
-            // 2. Cuerpo de la tabla
-            registros.forEach((fila, idx) => {
-                if (idx === 0) return;
-                if (filtro && (fila[1] || "").toLowerCase() !== filtro) return;
-
-                const serie = (fila[3] || "").trim().toLowerCase();
-                const km = (fila[4] || "").trim().toLowerCase();
-                const clave = serie + "-" + km;
-                const infoMantenimiento = historialMantenimiento[idx];
-                
-                let rowHtml = "";
-                
-                // Renderizar columnas originales
-                fila.forEach((celda, colIdx) => {
-                    let clase = "";
-                    if (duplicados.has(clave) && duplicados.get(clave).length > 1) {
-                        if (colIdx === 3 || colIdx === 4) {
-                            clase = "duplicado";
-                        }
-                    }
-                    rowHtml += `<td class="${clase}">${celda}</td>`;
-                });
-                
-                // Renderizar la nueva columna calculada con la alerta
-                let valorKmRecorrido = '';
-                let claseCalculada = '';
-
-                if (infoMantenimiento && infoMantenimiento.kmRecorridos !== null) {
-                    valorKmRecorrido = infoMantenimiento.kmRecorridos.toFixed(0);
-
-                    if (infoMantenimiento.alerta) {
-                        claseCalculada = 'alerta-mantenimiento';
-                        valorKmRecorrido += " 🚨"; 
-                    }
-                }
-                rowHtml += `<td class="${claseCalculada}">${valorKmRecorrido}</td>`;
-
-                tabla.innerHTML += `<tr>${rowHtml}</tr>`;
-            });
-        }
-
-        function descargarExcel() {
-            const sheetId = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI";  
-            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
-            window.open(url, "_blank");
-        }
-
-        cargarDatos();
-    </script>
+        cargarDatos();
+    </script>
 </body>
 </html>
-        function descargarExcel() {
-            const sheetId = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI";  
-            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
-            window.open(url, "_blank");
-        }
 
-        cargarDatos();
-    </script>
-</body>
-</html>
 
 
 
