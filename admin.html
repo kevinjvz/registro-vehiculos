@@ -20,7 +20,6 @@
         th { background-color: #e9ecef; color: #495057; font-weight: bold; text-transform: uppercase; }
         tr:hover { background-color: #f1f3f5; }
         .duplicado { background-color: #dc3545 !important; color: white; }
-        /* 🚨 NUEVA CLASE PARA LA ALERTA DE MANTENIMIENTO */
         .alerta-mantenimiento { background-color: #dc3545 !important; color: white; font-weight: bold; }
     </style>
 </head>
@@ -47,20 +46,53 @@
     <script>
         let registros = [];
         const UMBRAL_ALERTA_KM = 5000;
-        let historialMantenimiento = {}; // Almacena {idx_fila: {kmRecorridos: number, alerta: boolean}}
+        let historialMantenimiento = {}; 
+
+        // 🚨 LISTA DE REFERENCIA: KM Base de Mantenimiento por N.ECO 🚨
+        // Estos valores serán el punto de partida para la resta del KM recorrido
+        const KM_BASE_MAINTENANCE = {
+            "EQ-02": 165447,
+            "EQ-32": 88866,
+            "ET-67": 233344,
+            "LL0023": 275553,
+            "ET-57": 230826,
+            "EQ-16": 99727,
+            "ET-73": 272292,
+            "ET-54": 236734,
+            "ET-74": 261090,
+            "EQ-17": 140681,
+            "EQ-51": 26945,
+            "EQ-55": 18866,
+            "EA-49": 144210,
+            "ECO-138": 139433,
+            "ET-53": 286004,
+            "EQ-23": 55352,
+            "ET-55": 374301,
+            "ET-66": 259651,
+            "ET-36": 309436,
+            "EQ-29": 116571,
+            "ET-07": 56475,
+            "EQ-38": 106242,
+            "ET-64": 220211,
+            "LL0002": 87137,
+            "EA-44": 45211,
+            // Nota: Se usará el último valor que proporcionaste para EQ-14, que es 4140
+            "EQ-14": 4140, 
+            "ET-01": 348730,
+            "LL003": 277051,
+            "EA-23": 595214
+        };
 
         async function cargarDatos() {
-            // URL de tu hoja de Google publicada como CSV
             const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
             try {
                 const res = await fetch(url);
                 const text = await res.text();
                 
-                // Convertir el texto CSV a un arreglo de arreglos (filas y columnas)
                 const rows = text.split("\n");
                 registros = rows.map(row => row.split(","));
                 
-                // Ejecutar el cálculo antes de renderizar
+                // Primero se calcula la base de mantenimiento
                 calcularMantenimiento();
                 renderTable();
 
@@ -73,44 +105,45 @@
         }
 
         function calcularMantenimiento() {
-            // Map para rastrear el último KM registrado para cada N.ECO (Serie)
+            // Inicializa el Map de rastreo que almacena el KM de referencia
             const ultimoKm = new Map(); 
 
+            // 1. Cargar los valores de Mantenimiento Base proporcionados por el usuario
+            Object.entries(KM_BASE_MAINTENANCE).forEach(([serie, km]) => {
+                ultimoKm.set(serie.toUpperCase(), km);
+            });
+
+            // 2. Procesar los registros históricos
             registros.forEach((fila, idx) => {
-                if (idx === 0) return; // Saltar cabecera
+                if (idx === 0) return; 
                 
                 const equipo = (fila[1] || "").trim();
-                // Columna D: Número de Serie (N.ECO)
                 const serie = (fila[3] || "").trim().toUpperCase(); 
-                // Columna E: KM Actual
                 const kmActualStr = (fila[4] || "").trim(); 
                 const kmActual = parseFloat(kmActualStr);
 
-                // Solo aplica la lógica a los 'Vehículo' con un N.ECO y un KM válido y mayor a 0
                 if (equipo === 'Vehículo' && serie && !isNaN(kmActual) && kmActual > 0) {
-                    // Obtiene el KM anterior (el último KM registrado para este N.ECO)
+                    // Obtiene el KM de referencia (será el de la lista base O el del registro anterior)
                     const kmAnterior = ultimoKm.get(serie) || 0;
                     
-                    // CALCULO: Kilometraje Recorrido = KM Actual - KM Anterior
-                    const kmRecorridos = kmActual - kmAnterior;
+                    // Solo calculamos si el KM actual es mayor que el KM de referencia
+                    if (kmActual >= kmAnterior) {
+                        const kmRecorridos = kmActual - kmAnterior;
                     
-                    // Almacena el resultado para esta fila
-                    historialMantenimiento[idx] = {
-                        kmAnterior: kmAnterior,
-                        kmRecorridos: kmRecorridos,
-                        // Alerta si supera el umbral de 5000 km
-                        alerta: kmRecorridos > UMBRAL_ALERTA_KM
-                    };
+                        historialMantenimiento[idx] = {
+                            kmAnterior: kmAnterior,
+                            kmRecorridos: kmRecorridos,
+                            alerta: kmRecorridos > UMBRAL_ALERTA_KM
+                        };
                     
-                    // Actualiza el Map con el KM actual para que sirva de KM Anterior en el siguiente registro
-                    ultimoKm.set(serie, kmActual);
+                        // Actualiza el Map con el KM actual para el siguiente cálculo de este N.ECO
+                        ultimoKm.set(serie, kmActual);
+                    } else {
+                        // El KM actual es menor que el de referencia (ej. error de captura o registro antiguo)
+                        historialMantenimiento[idx] = { kmRecorridos: 0, alerta: false };
+                    }
                 } else {
-                    // Inicializa sin alerta para maquinaria o registros incompletos
-                    historialMantenimiento[idx] = {
-                        kmAnterior: null,
-                        kmRecorridos: null,
-                        alerta: false
-                    };
+                    historialMantenimiento[idx] = { kmRecorridos: null, alerta: false };
                 }
             });
         }
@@ -134,7 +167,7 @@
 
             // 1. Cabecera con la nueva columna de cálculo
             let headers = registros[0].slice(); 
-            headers.push("KM Recorridos desde Último Reg."); 
+            headers.push("KM Recorridos desde Último Mantenimiento"); // Nueva etiqueta
             const ths = headers.map(c => `<th>${c.trim()}</th>`).join("");
             tabla.innerHTML += `<tr>${ths}</tr>`;
 
@@ -150,7 +183,7 @@
                 
                 let rowHtml = "";
                 
-                // Renderizar columnas originales (manteniendo alerta de duplicados)
+                // Renderizar columnas originales
                 fila.forEach((celda, colIdx) => {
                     let clase = "";
                     if (duplicados.has(clave) && duplicados.get(clave).length > 1) {
@@ -166,12 +199,11 @@
                 let claseCalculada = '';
 
                 if (infoMantenimiento && infoMantenimiento.kmRecorridos !== null) {
-                    // Muestra el KM redondeado
                     valorKmRecorrido = infoMantenimiento.kmRecorridos.toFixed(0);
 
                     if (infoMantenimiento.alerta) {
                         claseCalculada = 'alerta-mantenimiento';
-                        valorKmRecorrido += " 🚨"; // Añade un ícono de alerta
+                        valorKmRecorrido += " 🚨"; 
                     }
                 }
                 rowHtml += `<td class="${claseCalculada}">${valorKmRecorrido}</td>`;
@@ -190,5 +222,16 @@
     </script>
 </body>
 </html>
+        function descargarExcel() {
+            const sheetId = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI";  
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
+            window.open(url, "_blank");
+        }
+
+        cargarDatos();
+    </script>
+</body>
+</html>
+
 
 
