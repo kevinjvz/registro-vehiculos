@@ -5,7 +5,7 @@
     <title>Panel de Administración</title>
     <style>
         body { font-family: 'Georgia', serif; margin: 0; background-color: #f8f9fa; color: #343a40; line-height: 1.6; }
-        .container { max-width: 1000px; margin: 50px auto; padding: 30px; background-color: #ffffff; border: 1px solid #e9ecef; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .container { max-width: 1200px; margin: 50px auto; padding: 30px; background-color: #ffffff; border: 1px solid #e9ecef; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         h2 { text-align: center; color: #495057; font-size: 2rem; margin-bottom: 5px; }
         p { text-align: center; color: #6c757d; margin-top: 0; }
         #loader { text-align: center; font-size: 1rem; color: #007bff; margin-bottom: 25px; }
@@ -15,8 +15,8 @@
         .toolbar select { background-color: #ffffff; }
         .toolbar button { background-color: #28a745; color: white; border: none; }
         .toolbar button:hover { background-color: #218838; }
-        table { width: 100%; border-collapse: collapse; margin-top: 25px; font-size: 0.9rem; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #dee2e6; }
+        table { width: 100%; border-collapse: collapse; margin-top: 25px; font-size: 0.85rem; }
+        th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid #dee2e6; }
         th { background-color: #e9ecef; color: #495057; font-weight: bold; text-transform: uppercase; }
         tr:hover { background-color: #f1f3f5; }
         .duplicado { background-color: #dc3545 !important; color: white; }
@@ -25,7 +25,7 @@
 <body>
     <div class="container">
         <h2>Panel de Administración</h2>
-        <p>Visualiza y filtra los registros directamente:</p>
+        <p>Visualiza, filtra y administra los registros:</p>
 
         <div id="loader">⏳ Cargando registros...</div>
 
@@ -44,13 +44,21 @@
 
     <script>
         let registros = [];
-
+        
+        // 👉 1. URL de tu hoja de Google Sheets en formato CSV (público)
+        // ESTA URL DEBE COINCIDIR CON LA DE TU HOJA PUBLICADA
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
+        
+        // 👉 2. ID de tu hoja de Google Sheets para exportar XLSX
+        // ESTE ID DEBE COINCIDIR CON EL DE TU HOJA
+        const SHEET_ID_XLSX = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI"; 
+        
         async function cargarDatos() {
-            const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSuym_67YopJjYQDYPVorqZO8XubMbI7GKLexnpN7ST_M9ShAvZuSEOfcy3nTuuyNG6TaN_vvU1-ib0/pub?output=csv";
             try {
-                const res = await fetch(url);
+                const res = await fetch(CSV_URL);
                 const text = await res.text();
-                registros = text.split("\n").map(row => row.split(","));
+                // Separa por línea, luego por coma. Ignora líneas vacías.
+                registros = text.split("\n").filter(row => row.trim() !== "").map(row => row.split(",")); 
                 renderTable();
             } catch (error) {
                 console.error("Error al cargar los datos:", error);
@@ -66,12 +74,21 @@
             const filtro = document.getElementById("filtroEquipo").value.toLowerCase();
             const duplicados = new Map();
 
+            // Mapeo de columnas para detección de duplicados:
+            // Índice 3: Serie/N.Económico
+            // Índice 4: KM
+            // Índice 5: HRS
+            
+            // Lógica para detectar duplicados (Serie/N.Económico + KM/HRS)
             registros.forEach((fila, idx) => {
-                if (idx === 0) return;
-                const serie = (fila[3] || "").trim().toLowerCase();
-                const km = (fila[4] || "").trim().toLowerCase();
-                if (serie && km) {
-                    const clave = serie + "-" + km;
+                if (idx === 0) return; // Ignorar encabezados
+                
+                const serie = (fila[3] || "").trim().toLowerCase(); 
+                // Usamos KM si existe, sino HRS, para generar una clave de medida
+                const medida = (fila[4] || fila[5] || "").trim().toLowerCase(); 
+                
+                if (serie && medida) {
+                    const clave = serie + "-" + medida;
                     if (duplicados.has(clave)) {
                         duplicados.set(clave, [...duplicados.get(clave), idx]);
                     } else {
@@ -80,23 +97,30 @@
                 }
             });
 
+            // Renderizar encabezados (leídos del CSV)
             const headers = registros[0];
             const ths = headers.map(c => `<th>${c}</th>`).join("");
             tabla.innerHTML += `<tr>${ths}</tr>`;
 
+            // Renderizar filas de datos
             registros.forEach((fila, idx) => {
-                if (idx === 0) return;
-                if (filtro && fila[1].toLowerCase() !== filtro) return;
+                if (idx === 0) return; // Ignorar encabezados
+                
+                // Aplicar filtro por Equipo (columna 1)
+                if (filtro && (fila[1] || "").toLowerCase() !== filtro) return;
 
+                // Preparar clave para verificar si es duplicado
                 const serie = (fila[3] || "").trim().toLowerCase();
-                const km = (fila[4] || "").trim().toLowerCase();
-                const clave = serie + "-" + km;
+                const medida = (fila[4] || fila[5] || "").trim().toLowerCase();
+                const clave = serie + "-" + medida;
 
                 let rowHtml = "";
                 fila.forEach((celda, colIdx) => {
                     let clase = "";
+                    
+                    // Resaltar las columnas 3 (Serie), 4 (KM) y 5 (HRS) si son duplicadas
                     if (duplicados.has(clave) && duplicados.get(clave).length > 1) {
-                        if (colIdx === 3 || colIdx === 4) {
+                        if (colIdx === 3 || colIdx === 4 || colIdx === 5) {
                             clase = "duplicado";
                         }
                     }
@@ -107,16 +131,15 @@
         }
 
         function descargarExcel() {
-            const sheetId = "1A4kCE2F9KcWYdRWFuMJV4gwEq_QP0tL0Rlp5V_YCIPI";  
-            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
+            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID_XLSX}/export?format=xlsx`;
             window.open(url, "_blank");
         }
 
+        // Iniciar la carga de datos al abrir la página
         cargarDatos();
     </script>
 </body>
 </html>
-
 
 
 
